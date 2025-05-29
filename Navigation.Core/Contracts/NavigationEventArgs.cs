@@ -2,17 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-using System;
-
 namespace ktsu.Navigation.Core.Contracts;
 
-/// <summary>
-/// Represents the navigation event handler delegate
-/// </summary>
-/// <typeparam name="T">The type of navigation item</typeparam>
-/// <param name="sender">The sender of the event</param>
-/// <param name="e">The navigation event arguments</param>
-public delegate void NavigationEventHandler<T>(object sender, NavigationEventArgs<T> e) where T : INavigationItem;
+using System;
 
 /// <summary>
 /// Provides data for navigation events

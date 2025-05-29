@@ -54,14 +54,14 @@ public class NavigationState<T> : INavigationState<T> where T : INavigationItem
 	/// <summary>
 	/// Creates a new navigation state from a navigation stack
 	/// </summary>
-	/// <param name="navigationStack">The navigation stack to create state from</param>
+	/// <param name="navigation">The navigation to create state from</param>
 	/// <returns>A new navigation state instance</returns>
-	public static NavigationState<T> FromNavigationStack(INavigationStack<T> navigationStack)
+	public static NavigationState<T> FromNavigationStack(INavigation<T> navigation)
 	{
-		ArgumentNullException.ThrowIfNull(navigationStack);
+		ArgumentNullException.ThrowIfNull(navigation);
 
-		var history = navigationStack.GetHistory();
-		var current = navigationStack.Current;
+		var history = navigation.GetHistory();
+		var current = navigation.Current;
 		var currentIndex = current != null ? history.ToList().FindIndex(item => item.Id == current.Id) : -1;
 
 		return new NavigationState<T>(history, currentIndex);

@@ -29,6 +29,9 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
 *   Keep methods short and focused on a single task.
 *   Use consistent formatting and indentation.
 *   Follow established coding standards (see contributing guidelines in documentation - added 2025-05-29)
+*   Using directives must be placed inside of a namespace declaration.
+*   Explicit accessibility modifiers (public, private, etc.) are required.
+*   Adhere to .NET naming conventions. Pay special attention to naming conventions for EventHandlers and types ending with "Stack".
 
 ## WORKFLOW & RELEASE RULES
 
@@ -57,6 +60,12 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
 *   Write unit tests to verify the correctness of code.
 *   Use logging to track the execution of code and identify errors.
 *   When encountering compilation errors related to nullability, especially with generic types, consider using `default(T?)` instead of `null` to ensure proper type inference.
+*   Ensure the project builds successfully before running tests. Common build errors include:
+    *   Incorrect placement of `using` directives.
+    *   Missing accessibility modifiers.
+    *   Naming convention violations.
+    *   Incorrect EventHandler usage.
+    *   Usage of non-primary constructors.
 
 ## PERSISTENCE
 

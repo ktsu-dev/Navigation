@@ -16,7 +16,7 @@ namespace ktsu.Navigation.Core.Services;
 /// A navigation stack implementation that supports undo/redo and persistence
 /// </summary>
 /// <typeparam name="T">The type of navigation items in the stack</typeparam>
-public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
+public class NavigationStack<T> : INavigation<T> where T : INavigationItem
 {
 	private readonly List<T> _items;
 	private readonly IUndoRedoProvider? _undoRedoProvider;
@@ -49,7 +49,7 @@ public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
 	public int Count => _items.Count;
 
 	/// <inheritdoc />
-	public event NavigationEventHandler<T>? NavigationChanged;
+	public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
 
 	/// <inheritdoc />
 	public void NavigateTo(T item)

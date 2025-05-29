@@ -64,5 +64,5 @@ public interface INavigationState<T> where T : INavigationItem
 	/// <summary>
 	/// Gets the timestamp when this state was created
 	/// </summary>
-	DateTime CreatedAt { get; }
+	public DateTime CreatedAt { get; }
 }

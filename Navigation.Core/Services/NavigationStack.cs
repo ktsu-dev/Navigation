@@ -16,7 +16,7 @@ using ktsu.Navigation.Core.Models;
 /// A navigation stack implementation that supports undo/redo and persistence
 /// </summary>
 /// <typeparam name="T">The type of navigation items in the stack</typeparam>
-public class NavigationStack<T> : INavigation<T> where T : INavigationItem
+public class Navigation<T> : INavigation<T> where T : INavigationItem
 {
 	private readonly List<T> _items;
 	private readonly IUndoRedoProvider? _undoRedoProvider;
@@ -24,11 +24,11 @@ public class NavigationStack<T> : INavigation<T> where T : INavigationItem
 	private int _currentIndex;
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="NavigationStack{T}"/> class
+	/// Initializes a new instance of the <see cref="Navigation{T}"/> class
 	/// </summary>
 	/// <param name="undoRedoProvider">Optional undo/redo provider</param>
 	/// <param name="persistenceProvider">Optional persistence provider</param>
-	public NavigationStack(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null)
+	public Navigation(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null)
 	{
 		_items = new List<T>();
 		_currentIndex = -1;

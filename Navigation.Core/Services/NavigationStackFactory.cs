@@ -36,7 +36,7 @@ public class NavigationStackFactory
 		var persistenceProvider = _serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
 		var undoRedoProvider = _serviceProvider?.Invoke(typeof(IUndoRedoProvider)) as IUndoRedoProvider ?? _defaultUndoRedoProvider;
 
-		return new NavigationStack<T>(undoRedoProvider, persistenceProvider);
+		return new Navigation<T>(undoRedoProvider, persistenceProvider);
 	}
 
 	/// <summary>
@@ -48,7 +48,7 @@ public class NavigationStackFactory
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider? undoRedoProvider, IPersistenceProvider<T>? persistenceProvider) where T : INavigationItem
 	{
-		return new NavigationStack<T>(undoRedoProvider, persistenceProvider);
+		return new Navigation<T>(undoRedoProvider, persistenceProvider);
 	}
 
 	/// <summary>
@@ -59,7 +59,7 @@ public class NavigationStackFactory
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider undoRedoProvider) where T : INavigationItem
 	{
-		return new NavigationStack<T>(undoRedoProvider);
+		return new Navigation<T>(undoRedoProvider);
 	}
 
 	/// <summary>
@@ -70,7 +70,7 @@ public class NavigationStackFactory
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateNavigationStack<T>(IPersistenceProvider<T> persistenceProvider) where T : INavigationItem
 	{
-		return new NavigationStack<T>(_defaultUndoRedoProvider, persistenceProvider);
+		return new Navigation<T>(_defaultUndoRedoProvider, persistenceProvider);
 	}
 
 	/// <summary>
@@ -80,6 +80,6 @@ public class NavigationStackFactory
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateBasicNavigationStack<T>() where T : INavigationItem
 	{
-		return new NavigationStack<T>();
+		return new Navigation<T>();
 	}
 }

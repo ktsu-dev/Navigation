@@ -1121,7 +1121,301 @@ vigation.Core\Navigation.Core.csproj]
 
 ---
 
+Let me continue fixing the remaining files. Let me fix the IPersistenceProvider.cs:
 
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Contracts;
+  
+  using System;
+  using System.Collections.Generic;
+  using System.Threading;
+  using System.Threading.Tasks;
+- 
+- namespace ktsu.Navigation.Core.Contracts;
+  
+  /// <summary>
+```
+
+```diff
+  	/// <param name="cancellationToken">A cancellation token</param>
+  	/// <returns>A task representing the asynchronous save operation</returns>
+- 	Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken = default);
++ 	public Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken = default);
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="cancellationToken">A cancellation token</param>
+  	/// <returns>A task representing the asynchronous load operation, containing the navigation state or null if none exists</returns>
+- 	Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default);
++ 	public Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default);
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="cancellationToken">A cancellation token</param>
+  	/// <returns>A task representing the asynchronous check operation, returning true if state exists</returns>
+- 	Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default);
++ 	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default);
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="cancellationToken">A cancellation token</param>
+  	/// <returns>A task representing the asynchronous clear operation</returns>
+- 	Task ClearSavedStateAsync(CancellationToken cancellationToken = default);
++ 	public Task ClearSavedStateAsync(CancellationToken cancellationToken = default);
+  }
+  
+```
+
+```diff
+  	/// Gets the items in the navigation stack
+  	/// </summary>
+- 	IReadOnlyList<T> Items { get; }
++ 	public IReadOnlyList<T> Items { get; }
+  
+  	/// <summary>
+  	/// Gets the index of the current item
+  	/// </summary>
+- 	int CurrentIndex { get; }
++ 	public int CurrentIndex { get; }
+  
+  	/// <summary>
+```
+
+---
+
+Let me continue with the IUndoRedoProvider.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
+- 
+- using System;
+  
+  namespace ktsu.Navigation.Core.Contracts;
++ 
++ using System;
+  
+  /// <summary>
+```
+
+```diff
+  	/// Gets a value indicating whether undo operations are available
+  	/// </summary>
+- 	bool CanUndo { get; }
++ 	public bool CanUndo { get; }
+  
+  	/// <summary>
+  	/// Gets a value indicating whether redo operations are available
+  	/// </summary>
+- 	bool CanRedo { get; }
++ 	public bool CanRedo { get; }
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="action">The action that can be undone</param>
+  	/// <param name="description">A description of the action</param>
+- 	void RegisterAction(IUndoableAction action, string description);
++ 	public void RegisterAction(IUndoableAction action, string description);
+  
+  	/// <summary>
+  	/// Performs an undo operation
+  	/// </summary>
+  	/// <returns>True if undo was successful; otherwise, false</returns>
+- 	bool Undo();
++ 	public bool Undo();
+  
+  	/// <summary>
+  	/// Performs a redo operation
+  	/// </summary>
+  	/// <returns>True if redo was successful; otherwise, false</returns>
+- 	bool Redo();
++ 	public bool Redo();
+  
+  	/// <summary>
+  	/// Clears all undo/redo history
+  	/// </summary>
+- 	void Clear();
++ 	public void Clear();
+  
+  	/// <summary>
+  	/// Event raised when the undo/redo state changes
+  	/// </summary>
+- 	event EventHandler? StateChanged;
++ 	public event EventHandler? StateChanged;
+  }
+  
+```
+
+```diff
+  	/// Gets the description of this action
+  	/// </summary>
+- 	string Description { get; }
++ 	public string Description { get; }
+  
+  	/// <summary>
+  	/// Executes the action
+  	/// </summary>
+- 	void Execute();
++ 	public void Execute();
+  
+  	/// <summary>
+  	/// Undoes the action
+  	/// </summary>
+- 	void Undo();
++ 	public void Undo();
+  }
+  
+```
+
+---
+
+Now let me fix the model files. Let me start with NavigationItem.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Models;
+  
+  using System;
+  using System.Collections.Generic;
+  using System.Collections.ObjectModel;
+  using ktsu.Navigation.Core.Contracts;
+- 
+- namespace ktsu.Navigation.Core.Models;
+  
+  /// <summary>
+```
+
+---
+
+Let me fix NavigationState.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Models;
+  
+  using System;
+  using System.Collections.Generic;
+  using System.Linq;
+  using ktsu.Navigation.Core.Contracts;
+- 
+- namespace ktsu.Navigation.Core.Models;
+  
+  /// <summary>
+```
+
+---
+
+Now let me fix the service files. Let me start with NavigationStack.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Services;
+  
+  using System;
+```
+
+```diff
+  using ktsu.Navigation.Core.Contracts;
+  using ktsu.Navigation.Core.Models;
+- 
+- namespace ktsu.Navigation.Core.Services;
+  
+  /// <summary>
+```
+
+---
+
+Let me continue with the other service files. Let me fix NavigationStackFactory.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Services;
+  
+  using System;
+  using ktsu.Navigation.Core.Contracts;
+- 
+- namespace ktsu.Navigation.Core.Services;
+  
+  /// <summary>
+```
+
+---
+
+Let me continue with the remaining service files. Let me check which ones are left:
+
+---
+
+Cancelled
+
+---
+
+
+
+---
+
+_**User**_
+
+continue
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+I can see the progress made and that there are still some files to fix. Let me continue with the remaining service files that need the using statements moved inside the namespace declaration.
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Services;
+  
+  using System.Threading;
+  using System.Threading.Tasks;
+  using ktsu.Navigation.Core.Contracts;
+- 
+- namespace ktsu.Navigation.Core.Services;
+  
+  /// <summary>
+```
+
+---
 
 
 

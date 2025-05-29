@@ -2,14 +2,14 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.Navigation.Core.Services;
+
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ktsu.Navigation.Core.Contracts;
-
-namespace ktsu.Navigation.Core.Services;
 
 /// <summary>
 /// A JSON file-based persistence provider for navigation state

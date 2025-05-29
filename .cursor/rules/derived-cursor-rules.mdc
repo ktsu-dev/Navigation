@@ -32,6 +32,8 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
 *   Using directives must be placed inside of a namespace declaration.
 *   Explicit accessibility modifiers (public, private, etc.) are required.
 *   Adhere to .NET naming conventions. Pay special attention to naming conventions for EventHandlers and types ending with "Stack".
+    *   Types ending with "Stack" should be avoided (CA1711).
+    *   EventHandlers should use the generic EventHandler<T> pattern (CA1003).
 
 ## WORKFLOW & RELEASE RULES
 

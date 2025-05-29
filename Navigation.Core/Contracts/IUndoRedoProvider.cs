@@ -2,9 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-using System;
-
 namespace ktsu.Navigation.Core.Contracts;
+
+using System;
 
 /// <summary>
 /// Defines the contract for external undo/redo providers
@@ -14,41 +14,41 @@ public interface IUndoRedoProvider
 	/// <summary>
 	/// Gets a value indicating whether undo operations are available
 	/// </summary>
-	bool CanUndo { get; }
+	public bool CanUndo { get; }
 
 	/// <summary>
 	/// Gets a value indicating whether redo operations are available
 	/// </summary>
-	bool CanRedo { get; }
+	public bool CanRedo { get; }
 
 	/// <summary>
 	/// Registers an undoable action with the provider
 	/// </summary>
 	/// <param name="action">The action that can be undone</param>
 	/// <param name="description">A description of the action</param>
-	void RegisterAction(IUndoableAction action, string description);
+	public void RegisterAction(IUndoableAction action, string description);
 
 	/// <summary>
 	/// Performs an undo operation
 	/// </summary>
 	/// <returns>True if undo was successful; otherwise, false</returns>
-	bool Undo();
+	public bool Undo();
 
 	/// <summary>
 	/// Performs a redo operation
 	/// </summary>
 	/// <returns>True if redo was successful; otherwise, false</returns>
-	bool Redo();
+	public bool Redo();
 
 	/// <summary>
 	/// Clears all undo/redo history
 	/// </summary>
-	void Clear();
+	public void Clear();
 
 	/// <summary>
 	/// Event raised when the undo/redo state changes
 	/// </summary>
-	event EventHandler? StateChanged;
+	public event EventHandler? StateChanged;
 }
 
 /// <summary>
@@ -59,15 +59,15 @@ public interface IUndoableAction
 	/// <summary>
 	/// Gets the description of this action
 	/// </summary>
-	string Description { get; }
+	public string Description { get; }
 
 	/// <summary>
 	/// Executes the action
 	/// </summary>
-	void Execute();
+	public void Execute();
 
 	/// <summary>
 	/// Undoes the action
 	/// </summary>
-	void Undo();
+	public void Undo();
 }

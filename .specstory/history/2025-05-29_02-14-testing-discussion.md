@@ -439,3 +439,691 @@ Now let me look at one of the implementation files to see the pattern:
 
 ---
 
+Read file: Navigation.Core/Services/NavigationStack.cs
+
+---
+
+Now I understand the issues. Based on the build errors, I need to fix several things. Let me start with the naming issues and EventHandler problems. First, let me fix the NavigationEventArgs.cs file:
+
+---
+
+```diff
+  
+  namespace ktsu.Navigation.Core.Contracts;
+- 
+- /// <summary>
+- /// Represents the navigation event handler delegate
+- /// </summary>
+- /// <typeparam name="T">The type of navigation item</typeparam>
+- /// <param name="sender">The sender of the event</param>
+- /// <param name="e">The navigation event arguments</param>
+- public delegate void NavigationEventHandler<T>(object sender, NavigationEventArgs<T> e) where T : INavigationItem;
+  
+  /// <summary>
+```
+
+---
+
+Now I need to fix the INavigationStack interface to rename it and update the event handler. Let me update the INavigationStack.cs file:
+
+---
+
+```diff
+  // Licensed under the MIT license.
+  
++ using System;
+  using System.Collections.Generic;
+  
+```
+
+```diff
+  /// </summary>
+  /// <typeparam name="T">The type of navigation items in the stack</typeparam>
+- public interface INavigationStack<T> where T : INavigationItem
++ public interface INavigation<T> where T : INavigationItem
+  {
+  	/// <summary>
+  	/// Gets the current item in the navigation stack
+  	/// </summary>
+- 	T? Current { get; }
++ 	public T? Current { get; }
+  
+  	/// <summary>
+  	/// Gets a value indicating whether there are items to navigate back to
+  	/// </summary>
+- 	bool CanGoBack { get; }
++ 	public bool CanGoBack { get; }
+  
+  	/// <summary>
+  	/// Gets a value indicating whether there are items to navigate forward to
+  	/// </summary>
+- 	bool CanGoForward { get; }
++ 	public bool CanGoForward { get; }
+  
+  	/// <summary>
+  	/// Gets the number of items in the stack
+  	/// </summary>
+- 	int Count { get; }
++ 	public int Count { get; }
+  
+  	/// <summary>
+  	/// Navigates to a new item, adding it to the stack
+  	/// </summary>
+  	/// <param name="item">The item to navigate to</param>
+- 	void NavigateTo(T item);
++ 	public void NavigateTo(T item);
+  
+  	/// <summary>
+  	/// Navigates back to the previous item in the stack
+  	/// </summary>
+  	/// <returns>The item navigated to, or null if navigation was not possible</returns>
+- 	T? GoBack();
++ 	public T? GoBack();
+  
+  	/// <summary>
+  	/// Navigates forward to the next item in the stack
+  	/// </summary>
+  	/// <returns>The item navigated to, or null if navigation was not possible</returns>
+- 	T? GoForward();
++ 	public T? GoForward();
+  
+  	/// <summary>
+  	/// Clears all items from the navigation stack
+  	/// </summary>
+- 	void Clear();
++ 	public void Clear();
+  
+  	/// <summary>
+  	/// Gets a read-only view of the navigation history
+  	/// </summary>
+  	/// <returns>A read-only collection of navigation items</returns>
+- 	IReadOnlyList<T> GetHistory();
++ 	public IReadOnlyList<T> GetHistory();
+  
+  	/// <summary>
+  	/// Gets the back stack (items before current)
+  	/// </summary>
+  	/// <returns>A read-only collection of items that can be navigated back to</returns>
+- 	IReadOnlyList<T> GetBackStack();
++ 	public IReadOnlyList<T> GetBackStack();
+  
+  	/// <summary>
+  	/// Gets the forward stack (items after current)
+  	/// </summary>
+  	/// <returns>A read-only collection of items that can be navigated forward to</returns>
+- 	IReadOnlyList<T> GetForwardStack();
++ 	public IReadOnlyList<T> GetForwardStack();
+  
+  	/// <summary>
+  	/// Event raised when navigation occurs
+  	/// </summary>
+- 	event NavigationEventHandler<T>? NavigationChanged;
++ 	public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
+  }
+  
+```
+
+---
+
+Now I need to update the INavigationItem interface to add public accessibility modifiers:
+
+---
+
+```diff
+  	/// Gets the unique identifier for this navigation item
+  	/// </summary>
+- 	string Id { get; }
++ 	public string Id { get; }
+  
+  	/// <summary>
+  	/// Gets or sets the display name for this navigation item
+  	/// </summary>
+- 	string DisplayName { get; set; }
++ 	public string DisplayName { get; set; }
+  
+  	/// <summary>
+  	/// Gets the timestamp when this navigation item was created
+  	/// </summary>
+- 	DateTime CreatedAt { get; }
++ 	public DateTime CreatedAt { get; }
+  
+  	/// <summary>
+  	/// Gets additional metadata associated with this navigation item
+  	/// </summary>
+- 	IReadOnlyDictionary<string, object> Metadata { get; }
++ 	public IReadOnlyDictionary<string, object> Metadata { get; }
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="key">The metadata key</param>
+  	/// <param name="value">The metadata value</param>
+- 	void SetMetadata(string key, object value);
++ 	public void SetMetadata(string key, object value);
+  
+  	/// <summary>
+```
+
+```diff
+  	/// <param name="key">The metadata key to remove</param>
+  	/// <returns>True if the metadata was removed; otherwise, false</returns>
+- 	bool RemoveMetadata(string key);
++ 	public bool RemoveMetadata(string key);
+  }
+  
+```
+
+---
+
+Now I need to check and fix the other contract files. Let me check the IPersistenceProvider.cs:
+
+---
+
+Read file: Navigation.Core/Contracts/IPersistenceProvider.cs
+
+---
+
+Now I need to update the NavigationStack class to use the new interface name and event handler. Let me first check the IUndoRedoProvider:
+
+---
+
+Read file: Navigation.Core/Contracts/IUndoRedoProvider.cs
+
+---
+
+Now let me update the NavigationStack.cs to use the new interface name and fix the event handler:
+
+---
+
+```diff
+  /// </summary>
+  /// <typeparam name="T">The type of navigation items in the stack</typeparam>
+- public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
++ public class NavigationStack<T> : INavigation<T> where T : INavigationItem
+  {
+  	private readonly List<T> _items;
+```
+
+```diff
+  
+  	/// <inheritdoc />
+- 	public event NavigationEventHandler<T>? NavigationChanged;
++ 	public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
+  
+  	/// <inheritdoc />
+```
+
+---
+
+Now I need to update the OnNavigationChanged method to use the new EventHandler pattern:
+
+---
+
+Read file: Navigation.Core/Services/NavigationStack.cs
+
+---
+
+Good! The OnNavigationChanged method already follows the correct pattern. Now let me check the NavigateToAction class which might need updating:
+
+---
+
+Read file: Navigation.Core/Services/NavigateToAction.cs
+
+---
+
+Now let me check the model files. Let me look at the NavigationItem:
+
+---
+
+Read file: Navigation.Core/Models/NavigationItem.cs
+
+---
+
+Let me check the NavigationState model:
+
+---
+
+Read file: Navigation.Core/Models/NavigationState.cs
+
+---
+
+I need to update the NavigationState.cs to use the new interface name. Let me fix that:
+
+---
+
+```diff
+  	/// Creates a new navigation state from a navigation stack
+  	/// </summary>
+- 	/// <param name="navigationStack">The navigation stack to create state from</param>
++ 	/// <param name="navigation">The navigation to create state from</param>
+  	/// <returns>A new navigation state instance</returns>
+- 	public static NavigationState<T> FromNavigationStack(INavigationStack<T> navigationStack)
++ 	public static NavigationState<T> FromNavigationStack(INavigation<T> navigation)
+  	{
+- 		ArgumentNullException.ThrowIfNull(navigationStack);
++ 		ArgumentNullException.ThrowIfNull(navigation);
+  
+- 		var history = navigationStack.GetHistory();
+- 		var current = navigationStack.Current;
++ 		var history = navigation.GetHistory();
++ 		var current = navigation.Current;
+  		var currentIndex = current != null ? history.ToList().FindIndex(item => item.Id == current.Id) : -1;
+  
+```
+
+---
+
+Now let me check the service implementations. Let me check the JsonFilePersistenceProvider:
+
+---
+
+Read file: Navigation.Core/Services/JsonFilePersistenceProvider.cs
+
+---
+
+Let me check the InMemoryPersistenceProvider:
+
+---
+
+Read file: Navigation.Core/Services/InMemoryPersistenceProvider.cs
+
+---
+
+Now let me try building the project to see if we've fixed the main issues:
+
+---
+
+```bash
+dotnet build Navigation.Core
+```
+
+```
+ PS C:\dev\ktsu-dev\Navigation >dotnet build Navigation.Core
+
+  C:\dev\ktsu-dev\Navigation\Navigation.Core\Navigation.Core.csproj        Restore (0.0s) 
+Restore complete (0.3s)
+  Navigation.Core failed with 5 error(s) and 2 warning(s) (0.4s)
+    C:\Users\MatthewEdmondson\.nuget\packages\microsoft.build.tasks.git\8.0.0\build\Micros
+oft.Build.Tasks.Git.targets(25,5): warning : Repository 'C:\dev\ktsu-dev\Navigation' has n
+o remote.
+    C:\Users\MatthewEdmondson\.nuget\packages\microsoft.sourcelink.common\8.0.0\build\Micr
+osoft.SourceLink.Common.targets(53,5): warning : Source control information is not availab
+le - the generated source link is empty.
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(34,9): e
+rror CS0246: The type or namespace name 'INavigationStack<>' could not be found (are you m
+issing a using directive or an assembly reference?)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(49,9): e
+rror CS0246: The type or namespace name 'INavigationStack<>' could not be found (are you m
+issing a using directive or an assembly reference?)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(60,9): e
+rror CS0246: The type or namespace name 'INavigationStack<>' could not be found (are you m
+issing a using directive or an assembly reference?)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(71,9): e
+rror CS0246: The type or namespace name 'INavigationStack<>' could not be found (are you m
+issing a using directive or an assembly reference?)
+rror CS0246: The type or namespace name 'INavigationStack<>' could not be found (are you m
+issing a using directive or an assembly reference?)
+
+Build failed with 5 error(s) and 2 warning(s) in 1.1s
+  02:17:59  Navigation  1.43s   1 - ERROR 
+  12:17:59 main  ?1 ~6 
+ PS C:\dev\ktsu-dev\Navigation >
+```
+
+---
+
+I need to check and fix the NavigationStackFactory.cs file as it's still referencing the old interface name:
+
+---
+
+Read file: Navigation.Core/Services/NavigationStackFactory.cs
+
+---
+
+I need to update the NavigationStackFactory to use the new interface name:
+
+---
+
+```diff
+  	/// <typeparam name="T">The type of navigation items</typeparam>
+  	/// <returns>A new navigation stack instance</returns>
+- 	public INavigationStack<T> CreateNavigationStack<T>() where T : INavigationItem
++ 	public INavigation<T> CreateNavigationStack<T>() where T : INavigationItem
+  	{
+  		var persistenceProvider = _serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
+```
+
+```diff
+  	/// <param name="persistenceProvider">The persistence provider to use</param>
+  	/// <returns>A new navigation stack instance</returns>
+- 	public INavigationStack<T> CreateNavigationStack<T>(IUndoRedoProvider? undoRedoProvider, IPersistenceProvider<T>? persistenceProvider) where T : INavigationItem
++ 	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider? undoRedoProvider, IPersistenceProvider<T>? persistenceProvider) where T : INavigationItem
+  	{
+  		return new NavigationStack<T>(undoRedoProvider, persistenceProvider);
+```
+
+```diff
+  	/// <param name="undoRedoProvider">The undo/redo provider to use</param>
+  	/// <returns>A new navigation stack instance</returns>
+- 	public INavigationStack<T> CreateNavigationStack<T>(IUndoRedoProvider undoRedoProvider) where T : INavigationItem
++ 	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider undoRedoProvider) where T : INavigationItem
+  	{
+  		return new NavigationStack<T>(undoRedoProvider);
+```
+
+```diff
+  	/// <param name="persistenceProvider">The persistence provider to use</param>
+  	/// <returns>A new navigation stack instance</returns>
+- 	public INavigationStack<T> CreateNavigationStack<T>(IPersistenceProvider<T> persistenceProvider) where T : INavigationItem
++ 	public INavigation<T> CreateNavigationStack<T>(IPersistenceProvider<T> persistenceProvider) where T : INavigationItem
+  	{
+  		return new NavigationStack<T>(_defaultUndoRedoProvider, persistenceProvider);
+```
+
+```diff
+  	/// <typeparam name="T">The type of navigation items</typeparam>
+  	/// <returns>A new navigation stack instance</returns>
+- 	public INavigationStack<T> CreateBasicNavigationStack<T>() where T : INavigationItem
++ 	public INavigation<T> CreateBasicNavigationStack<T>() where T : INavigationItem
+  	{
+  		return new NavigationStack<T>();
+```
+
+---
+
+Now let me try building the Navigation.Core project again:
+
+---
+
+```bash
+dotnet build Navigation.Core
+```
+
+```
+ PS C:\dev\ktsu-dev\Navigation >dotnet build Navigation.Core
+
+  C:\dev\ktsu-dev\Navigation\Navigation.Core\Navigation.Core.csproj        Restore (0.0s) 
+Restore complete (0.7s)
+  Navigation.Core failed with 106 error(s) and 2 warning(s) (0.7s)
+    C:\Users\MatthewEdmondson\.nuget\packages\microsoft.build.tasks.git\8.0.0\build\Micros
+oft.Build.Tasks.Git.targets(25,5): warning : Repository 'C:\dev\ktsu-dev\Navigation' has n
+o remote.
+    C:\Users\MatthewEdmondson\.nuget\packages\microsoft.sourcelink.common\8.0.0\build\Micr
+osoft.SourceLink.Common.targets(53,5): warning : Source control information is not availab
+le - the generated source link is empty.
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\INavigationItem.cs(5,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\INavigationItem.cs(6,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\INavigationStack.cs(5,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\INavigationStack.cs(6,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(5,1): err
+or IDE0065: Using directives must be placed inside of a namespace declaration (https://lea
+rn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(6,1): err
+or IDE0065: Using directives must be placed inside of a namespace declaration (https://lea
+rn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(7,1): err
+or IDE0065: Using directives must be placed inside of a namespace declaration (https://lea
+rn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(8,1): err
+or IDE0065: Using directives must be placed inside of a namespace declaration (https://lea
+rn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IUndoRedoProvider.cs(5,1): error 
+IDE0065: Using directives must be placed inside of a namespace declaration (https://learn.
+microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\NavigationEventArgs.cs(5,1): erro
+r IDE0065: Using directives must be placed inside of a namespace declaration (https://lear
+n.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(5,1): error IDE006
+5: Using directives must be placed inside of a namespace declaration (https://learn.micros
+oft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(6,1): error IDE006
+5: Using directives must be placed inside of a namespace declaration (https://learn.micros
+oft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(7,1): error IDE006
+5: Using directives must be placed inside of a namespace declaration (https://learn.micros
+oft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(8,1): error IDE006
+5: Using directives must be placed inside of a namespace declaration (https://learn.micros
+oft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationState.cs(5,1): error IDE00
+65: Using directives must be placed inside of a namespace declaration (https://learn.micro
+soft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationState.cs(6,1): error IDE00
+65: Using directives must be placed inside of a namespace declaration (https://learn.micro
+soft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationState.cs(7,1): error IDE00
+65: Using directives must be placed inside of a namespace declaration (https://learn.micro
+soft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationState.cs(8,1): error IDE00
+65: Using directives must be placed inside of a namespace declaration (https://learn.micro
+soft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\InMemoryPersistenceProvider.cs(5,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\InMemoryPersistenceProvider.cs(6,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\InMemoryPersistenceProvider.cs(7,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(5,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(6,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(7,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(8,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(9,1
+): error IDE0065: Using directives must be placed inside of a namespace declaration (https
+://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\JsonFilePersistenceProvider.cs(10,
+1): error IDE0065: Using directives must be placed inside of a namespace declaration (http
+s://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigateToAction.cs(5,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigateToAction.cs(6,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigateToAction.cs(7,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigateToAction.cs(8,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(5,1): error IDE
+0065: Using directives must be placed inside of a namespace declaration (https://learn.mic
+rosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(6,1): error IDE
+0065: Using directives must be placed inside of a namespace declaration (https://learn.mic
+rosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(7,1): error IDE
+0065: Using directives must be placed inside of a namespace declaration (https://learn.mic
+rosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(8,1): error IDE
+0065: Using directives must be placed inside of a namespace declaration (https://learn.mic
+rosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(9,1): error IDE
+0065: Using directives must be placed inside of a namespace declaration (https://learn.mic
+rosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(10,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStack.cs(11,1): error ID
+E0065: Using directives must be placed inside of a namespace declaration (https://learn.mi
+crosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(5,1): er
+ror IDE0065: Using directives must be placed inside of a namespace declaration (https://le
+arn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\NavigationStackFactory.cs(6,1): er
+ror IDE0065: Using directives must be placed inside of a namespace declaration (https://le
+arn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\SimpleUndoRedoProvider.cs(5,1): er
+ror IDE0065: Using directives must be placed inside of a namespace declaration (https://le
+arn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\SimpleUndoRedoProvider.cs(6,1): er
+ror IDE0065: Using directives must be placed inside of a namespace declaration (https://le
+arn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065)
+    C:\dev\ktsu-dev\Navigation\Navigation.Core\Services\SimpleUndoRedoProvider.cs(7,1): er
+ror IDE0065: Using directives must be placed inside of a namespace declaration (https://le
+E0290: Use primary constructor (https://learn.microsoft.com/dotnet/fundamentals/code-analy
+sis/style-rules/ide0290)
+
+Build failed with 106 error(s) and 2 warning(s) in 2.5s
+  02:18:32  Navigation  2.868s   1 - ERROR 
+  12:18:32 main  ?1 ~7 
+ PS C:\dev\ktsu-dev\Navigation >
+```
+
+---
+
+I see the issue now. The IDE0065 error requires that using statements be placed **inside** the namespace declaration, not outside. This is a specific code style requirement. Let me fix this systematically. I need to move the using statements inside the namespace declarations for all files.
+
+Let me start with the contract files and use a more efficient approach. Let me check an existing file in the Navigation.Test to see the expected structure:
+
+---
+
+Read file: Navigation.Test/NavigationStackTests.cs
+
+---
+
+I can see that the test file has the using statements outside the namespace, but it's also referencing `INavigationStack<NavigationItem>` which means the test file also needs to be updated. However, I notice that the test file compiles successfully in the structure the user has, which suggests the issue might be specific to the IDE rules configuration.
+
+Let me try a different approach. Let me move the using statements inside the namespace for one file to see if that resolves the IDE0065 error, then apply it to the rest. Let me start with a simple contract file:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Contracts;
+  
+  using System;
+  using System.Collections.Generic;
+- 
+- namespace ktsu.Navigation.Core.Contracts;
+  
+  /// <summary>
+```
+
+---
+
+Now let me apply the same pattern to all other files systematically. Let me do the INavigation interface:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
++ 
++ namespace ktsu.Navigation.Core.Contracts;
+  
+  using System;
+  using System.Collections.Generic;
+- 
+- namespace ktsu.Navigation.Core.Contracts;
+  
+  /// <summary>
+```
+
+---
+
+Let me continue with the other contract files. Let me update the NavigationEventArgs.cs:
+
+---
+
+```diff
+  // All rights reserved.
+  // Licensed under the MIT license.
+- 
+- using System;
+  
+  namespace ktsu.Navigation.Core.Contracts;
++ 
++ using System;
+  
+  /// <summary>
+```
+
+---
+
+Let me continue with the remaining contract files quickly. Let me use a more automated approach and try to fix all the files that need the using statement moved inside the namespace. Let me run a test build to see the progress:
+
+---
+
+```bash
+dotnet build Navigation.Core 2>&1 | findstr "IDE0065" | head -10
+```
+
+```
+ PS C:\dev\ktsu-dev\Navigation >dotnet build Navigation.Core 2>&1 | findstr "IDE0065" | he
+ad -10
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(5,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navig
+ation\Navigation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(6,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navig
+ation\Navigation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(7,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navig
+ation\Navigation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IPersistenceProvider.cs(8,1): error I
+DE0065: Using directives must be placed inside of a namespace declaration (https://learn.m
+icrosoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navig
+ation\Navigation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Contracts\IUndoRedoProvider.cs(5,1): error IDE0
+065: Using directives must be placed inside of a namespace declaration (https://learn.micr
+osoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigati
+on\Navigation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(5,1): error IDE0065: U
+sing directives must be placed inside of a namespace declaration (https://learn.microsoft.
+com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigation\Nav
+igation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(6,1): error IDE0065: U
+sing directives must be placed inside of a namespace declaration (https://learn.microsoft.
+com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigation\Nav
+igation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(7,1): error IDE0065: U
+sing directives must be placed inside of a namespace declaration (https://learn.microsoft.
+com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigation\Nav
+igation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationItem.cs(8,1): error IDE0065: U
+sing directives must be placed inside of a namespace declaration (https://learn.microsoft.
+com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigation\Nav
+igation.Core\Navigation.Core.csproj]
+C:\dev\ktsu-dev\Navigation\Navigation.Core\Models\NavigationState.cs(5,1): error IDE0065: 
+Using directives must be placed inside of a namespace declaration (https://learn.microsoft
+.com/dotnet/fundamentals/code-analysis/style-rules/ide0065) [C:\dev\ktsu-dev\Navigation\Na
+vigation.Core\Navigation.Core.csproj]
++                                     ~~~~~~~~~~~~~~~~~.
+  02:22:02  Navigation  1.606s   1 - ERROR 
+  12:22:02 main 
+ PS C:\dev\ktsu-dev\Navigation >
+```
+
+---
+
+
+
+
+
+---
+

@@ -114,7 +114,7 @@ public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
 		_items.Clear();
 		_currentIndex = -1;
 
-		OnNavigationChanged(NavigationType.Clear, previousItem, null);
+		OnNavigationChanged(NavigationType.Clear, previousItem, default(T?));
 	}
 
 	/// <inheritdoc />
@@ -167,7 +167,7 @@ public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
 		_items.AddRange(state.Items);
 		_currentIndex = state.CurrentIndex;
 
-		OnNavigationChanged(NavigationType.NavigateTo, null, Current);
+		OnNavigationChanged(NavigationType.NavigateTo, default(T?), Current);
 		return true;
 	}
 

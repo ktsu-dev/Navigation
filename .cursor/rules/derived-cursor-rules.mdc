@@ -56,6 +56,7 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
 *   Use a debugger to step through code and identify issues.
 *   Write unit tests to verify the correctness of code.
 *   Use logging to track the execution of code and identify errors.
+*   When encountering compilation errors related to nullability, especially with generic types, consider using `default(T?)` instead of `null` to ensure proper type inference.
 
 ## PERSISTENCE
 

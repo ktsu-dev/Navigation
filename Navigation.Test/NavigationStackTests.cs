@@ -14,7 +14,7 @@ namespace ktsu.Navigation.Test;
 [TestClass]
 public class NavigationStackTests
 {
-	private INavigationStack<NavigationItem>? _navigationStack;
+	private INavigation<NavigationItem>? _navigation;
 	private SimpleUndoRedoProvider? _undoRedoProvider;
 	private InMemoryPersistenceProvider<NavigationItem>? _persistenceProvider;
 
@@ -23,7 +23,7 @@ public class NavigationStackTests
 	{
 		_undoRedoProvider = new SimpleUndoRedoProvider();
 		_persistenceProvider = new InMemoryPersistenceProvider<NavigationItem>();
-		_navigationStack = new NavigationStack<NavigationItem>(_undoRedoProvider, _persistenceProvider);
+		_navigation = new Navigation<NavigationItem>(_undoRedoProvider, _persistenceProvider);
 	}
 
 	[TestMethod]
@@ -33,10 +33,10 @@ public class NavigationStackTests
 		// Setup already creates the navigation stack
 
 		// Assert
-		Assert.IsNull(_navigationStack!.Current);
-		Assert.IsFalse(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
-		Assert.AreEqual(0, _navigationStack.Count);
+		Assert.IsNull(_navigation!.Current);
+		Assert.IsFalse(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
+		Assert.AreEqual(0, _navigation.Count);
 	}
 
 	[TestMethod]
@@ -46,13 +46,13 @@ public class NavigationStackTests
 		var item = new NavigationItem("1", "First Item");
 
 		// Act
-		_navigationStack!.NavigateTo(item);
+		_navigation!.NavigateTo(item);
 
 		// Assert
-		Assert.AreEqual(item, _navigationStack.Current);
-		Assert.IsFalse(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
-		Assert.AreEqual(1, _navigationStack.Count);
+		Assert.AreEqual(item, _navigation.Current);
+		Assert.IsFalse(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
+		Assert.AreEqual(1, _navigation.Count);
 	}
 
 	[TestMethod]
@@ -63,14 +63,14 @@ public class NavigationStackTests
 		var item2 = new NavigationItem("2", "Second Item");
 
 		// Act
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
 
 		// Assert
-		Assert.AreEqual(item2, _navigationStack.Current);
-		Assert.IsTrue(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
-		Assert.AreEqual(2, _navigationStack.Count);
+		Assert.AreEqual(item2, _navigation.Current);
+		Assert.IsTrue(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
+		Assert.AreEqual(2, _navigation.Count);
 	}
 
 	[TestMethod]
@@ -79,17 +79,17 @@ public class NavigationStackTests
 		// Arrange
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
 
 		// Act
-		var result = _navigationStack.GoBack();
+		var result = _navigation.GoBack();
 
 		// Assert
 		Assert.AreEqual(item1, result);
-		Assert.AreEqual(item1, _navigationStack.Current);
-		Assert.IsFalse(_navigationStack.CanGoBack);
-		Assert.IsTrue(_navigationStack.CanGoForward);
+		Assert.AreEqual(item1, _navigation.Current);
+		Assert.IsFalse(_navigation.CanGoBack);
+		Assert.IsTrue(_navigation.CanGoForward);
 	}
 
 	[TestMethod]
@@ -98,18 +98,18 @@ public class NavigationStackTests
 		// Arrange
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
-		_navigationStack.GoBack();
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
+		_navigation.GoBack();
 
 		// Act
-		var result = _navigationStack.GoForward();
+		var result = _navigation.GoForward();
 
 		// Assert
 		Assert.AreEqual(item2, result);
-		Assert.AreEqual(item2, _navigationStack.Current);
-		Assert.IsTrue(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
+		Assert.AreEqual(item2, _navigation.Current);
+		Assert.IsTrue(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
 	}
 
 	[TestMethod]
@@ -119,18 +119,18 @@ public class NavigationStackTests
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
 		var item3 = new NavigationItem("3", "Third Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
-		_navigationStack.GoBack();
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
+		_navigation.GoBack();
 
 		// Act
-		_navigationStack.NavigateTo(item3);
+		_navigation.NavigateTo(item3);
 
 		// Assert
-		Assert.AreEqual(item3, _navigationStack.Current);
-		Assert.IsTrue(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
-		Assert.AreEqual(2, _navigationStack.Count);
+		Assert.AreEqual(item3, _navigation.Current);
+		Assert.IsTrue(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
+		Assert.AreEqual(2, _navigation.Count);
 	}
 
 	[TestMethod]
@@ -139,17 +139,17 @@ public class NavigationStackTests
 		// Arrange
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
 
 		// Act
-		_navigationStack.Clear();
+		_navigation.Clear();
 
 		// Assert
-		Assert.IsNull(_navigationStack.Current);
-		Assert.IsFalse(_navigationStack.CanGoBack);
-		Assert.IsFalse(_navigationStack.CanGoForward);
-		Assert.AreEqual(0, _navigationStack.Count);
+		Assert.IsNull(_navigation.Current);
+		Assert.IsFalse(_navigation.CanGoBack);
+		Assert.IsFalse(_navigation.CanGoForward);
+		Assert.AreEqual(0, _navigation.Count);
 	}
 
 	[TestMethod]
@@ -158,7 +158,7 @@ public class NavigationStackTests
 		// Arrange
 		var eventRaised = false;
 		NavigationEventArgs<NavigationItem>? eventArgs = null;
-		_navigationStack!.NavigationChanged += (sender, e) =>
+		_navigation!.NavigationChanged += (sender, e) =>
 		{
 			eventRaised = true;
 			eventArgs = e;
@@ -166,7 +166,7 @@ public class NavigationStackTests
 		var item = new NavigationItem("1", "First Item");
 
 		// Act
-		_navigationStack.NavigateTo(item);
+		_navigation.NavigateTo(item);
 
 		// Assert
 		Assert.IsTrue(eventRaised);
@@ -182,21 +182,21 @@ public class NavigationStackTests
 		// Arrange
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
-		_navigationStack!.NavigateTo(item1);
+		_navigation!.NavigateTo(item1);
 
 		// Act
-		_navigationStack.NavigateTo(item2);
+		_navigation.NavigateTo(item2);
 		_undoRedoProvider!.Undo();
 
 		// Assert
-		Assert.AreEqual(item1, _navigationStack.Current);
+		Assert.AreEqual(item1, _navigation.Current);
 		Assert.IsTrue(_undoRedoProvider.CanRedo);
 
 		// Act - Redo
 		_undoRedoProvider.Redo();
 
 		// Assert
-		Assert.AreEqual(item2, _navigationStack.Current);
+		Assert.AreEqual(item2, _navigation.Current);
 	}
 
 	[TestMethod]
@@ -206,12 +206,12 @@ public class NavigationStackTests
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
 		var item3 = new NavigationItem("3", "Third Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
-		_navigationStack.NavigateTo(item3);
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
+		_navigation.NavigateTo(item3);
 
 		// Act
-		var backStack = _navigationStack.GetBackStack();
+		var backStack = _navigation.GetBackStack();
 
 		// Assert
 		Assert.AreEqual(2, backStack.Count);
@@ -226,14 +226,14 @@ public class NavigationStackTests
 		var item1 = new NavigationItem("1", "First Item");
 		var item2 = new NavigationItem("2", "Second Item");
 		var item3 = new NavigationItem("3", "Third Item");
-		_navigationStack!.NavigateTo(item1);
-		_navigationStack.NavigateTo(item2);
-		_navigationStack.NavigateTo(item3);
-		_navigationStack.GoBack();
-		_navigationStack.GoBack();
+		_navigation!.NavigateTo(item1);
+		_navigation.NavigateTo(item2);
+		_navigation.NavigateTo(item3);
+		_navigation.GoBack();
+		_navigation.GoBack();
 
 		// Act
-		var forwardStack = _navigationStack.GetForwardStack();
+		var forwardStack = _navigation.GetForwardStack();
 
 		// Assert
 		Assert.AreEqual(2, forwardStack.Count);

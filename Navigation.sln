@@ -4,10 +4,6 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Core", "Navigation.Core\Navigation.Core.csproj", "1ddc46cf-8a3b-4324-8738-2c2081298008"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.CLI", "Navigation.CLI\Navigation.CLI.csproj", "51212bdf-7d8c-4a63-84a1-67b5073b737d"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.App", "Navigation.App\Navigation.App.csproj", "48e01be7-bcc4-4cda-802a-9decc700daa9"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Test", "Navigation.Test\Navigation.Test.csproj", "a801e7c9-36b5-474d-8067-516a44526556"
 EndProject
 Global
@@ -20,14 +16,6 @@ Global
 		{1ddc46cf-8a3b-4324-8738-2c2081298008}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ddc46cf-8a3b-4324-8738-2c2081298008}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ddc46cf-8a3b-4324-8738-2c2081298008}.Release|Any CPU.Build.0 = Release|Any CPU
-		{51212bdf-7d8c-4a63-84a1-67b5073b737d}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{51212bdf-7d8c-4a63-84a1-67b5073b737d}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{51212bdf-7d8c-4a63-84a1-67b5073b737d}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{51212bdf-7d8c-4a63-84a1-67b5073b737d}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48e01be7-bcc4-4cda-802a-9decc700daa9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48e01be7-bcc4-4cda-802a-9decc700daa9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48e01be7-bcc4-4cda-802a-9decc700daa9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48e01be7-bcc4-4cda-802a-9decc700daa9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{a801e7c9-36b5-474d-8067-516a44526556}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{a801e7c9-36b5-474d-8067-516a44526556}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{a801e7c9-36b5-474d-8067-516a44526556}.Release|Any CPU.ActiveCfg = Release|Any CPU

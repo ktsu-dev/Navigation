@@ -1,0 +1,56 @@
+
+## PROJECT OVERVIEW
+
+This document outlines the rules, guidelines, and best practices for developing and maintaining the AI-assisted navigation stack library. This library is intended to be a robust, flexible, and maintainable solution for managing navigation within applications, with support for undo/redo functionality, persistence, and a clean architecture.
+
+## ARCHITECTURE
+
+The project follows a Contracts, Models, Services (CMS) architecture, adhering to SOLID and DRY principles.
+
+*   **Contracts:** Define interfaces for services and data structures.
+*   **Models:** Represent the data structures used throughout the library.
+*   **Services:** Implement the core logic of the navigation stack.
+
+## TECH STACK
+
+*   .NET (Specific version to be determined and updated here)
+
+## CODING STANDARDS
+
+*   Adhere to SOLID principles (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion).
+*   Follow DRY principle (Don't Repeat Yourself).
+*   Use meaningful names for variables, methods, and classes.
+*   Write clear and concise comments to explain complex logic.
+*   Keep methods short and focused on a single task.
+*   Use consistent formatting and indentation.
+
+## WORKFLOW & RELEASE RULES
+
+*   Use Git for version control.
+*   Create branches for new features and bug fixes.
+*   Submit pull requests for code review before merging into the main branch.
+*   Write unit tests for all new code.
+*   Ensure all tests pass before submitting a pull request.
+*   Follow semantic versioning for releases.
+
+## PROJECT DOCUMENTATION & CONTEXT SYSTEM
+
+*   Maintain a comprehensive README file with instructions on how to use the library.
+*   Generate API documentation using XML comments.
+
+## DEBUGGING
+
+*   Use a debugger to step through code and identify issues.
+*   Write unit tests to verify the correctness of code.
+*   Use logging to track the execution of code and identify errors.
+
+## PERSISTENCE
+
+*   Implement a mechanism for persisting the navigation stack across sessions.
+*   Consider using a database or file storage for persistence.
+*   Ensure that the persistence mechanism is efficient and reliable.
+
+## UNDO/REDO
+
+*   Integrate with an external undo/redo provider.
+*   Implement commands for navigation operations to support undo/redo functionality.

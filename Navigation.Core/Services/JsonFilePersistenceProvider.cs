@@ -52,7 +52,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 		}
 
 		var json = JsonSerializer.Serialize(state, _jsonOptions);
-		await File.WriteAllTextAsync(_filePath, json, cancellationToken);
+		await File.WriteAllTextAsync(_filePath, json, cancellationToken).ConfigureAwait(false);
 	}
 
 	/// <inheritdoc />
@@ -65,7 +65,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 
 		try
 		{
-			var json = await File.ReadAllTextAsync(_filePath, cancellationToken);
+			var json = await File.ReadAllTextAsync(_filePath, cancellationToken).ConfigureAwait(false);
 			return JsonSerializer.Deserialize<INavigationState<T>>(json, _jsonOptions);
 		}
 		catch (JsonException)
@@ -81,10 +81,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	/// <inheritdoc />
-	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default)
-	{
-		return Task.FromResult(File.Exists(_filePath));
-	}
+	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default) => Task.FromResult(File.Exists(_filePath));
 
 	/// <inheritdoc />
 	public Task ClearSavedStateAsync(CancellationToken cancellationToken = default)

@@ -10,35 +10,29 @@ using System;
 /// Provides data for navigation events
 /// </summary>
 /// <typeparam name="T">The type of navigation item</typeparam>
-public class NavigationEventArgs<T> : EventArgs where T : INavigationItem
+/// <remarks>
+/// Initializes a new instance of the <see cref="NavigationEventArgs{T}"/> class
+/// </remarks>
+/// <param name="navigationType">The type of navigation that occurred</param>
+/// <param name="previousItem">The previous navigation item</param>
+/// <param name="currentItem">The current navigation item</param>
+public class NavigationEventArgs<T>(NavigationType navigationType, T? previousItem, T? currentItem) : EventArgs where T : INavigationItem
 {
-	/// <summary>
-	/// Initializes a new instance of the <see cref="NavigationEventArgs{T}"/> class
-	/// </summary>
-	/// <param name="navigationType">The type of navigation that occurred</param>
-	/// <param name="previousItem">The previous navigation item</param>
-	/// <param name="currentItem">The current navigation item</param>
-	public NavigationEventArgs(NavigationType navigationType, T? previousItem, T? currentItem)
-	{
-		NavigationType = navigationType;
-		PreviousItem = previousItem;
-		CurrentItem = currentItem;
-	}
 
 	/// <summary>
 	/// Gets the type of navigation that occurred
 	/// </summary>
-	public NavigationType NavigationType { get; }
+	public NavigationType NavigationType { get; } = navigationType;
 
 	/// <summary>
 	/// Gets the previous navigation item
 	/// </summary>
-	public T? PreviousItem { get; }
+	public T? PreviousItem { get; } = previousItem;
 
 	/// <summary>
 	/// Gets the current navigation item
 	/// </summary>
-	public T? CurrentItem { get; }
+	public T? CurrentItem { get; } = currentItem;
 }
 
 /// <summary>

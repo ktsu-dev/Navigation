@@ -2,19 +2,16 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-using System;
-using System.Linq;
+namespace ktsu.Navigation.Test;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ktsu.Navigation.Core.Contracts;
 using ktsu.Navigation.Core.Models;
 using ktsu.Navigation.Core.Services;
 
-namespace ktsu.Navigation.Test;
-
 [TestClass]
 public class NavigationStackTests
 {
-	private INavigation<NavigationItem>? _navigation;
+	private Navigation<NavigationItem>? _navigation;
 	private SimpleUndoRedoProvider? _undoRedoProvider;
 	private InMemoryPersistenceProvider<NavigationItem>? _persistenceProvider;
 

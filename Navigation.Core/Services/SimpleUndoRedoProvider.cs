@@ -30,8 +30,8 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 		}
 
 		_maxHistorySize = maxHistorySize;
-		_undoStack = new List<IUndoableAction>();
-		_redoStack = new List<IUndoableAction>();
+		_undoStack = [];
+		_redoStack = [];
 	}
 
 	/// <inheritdoc />
@@ -138,8 +138,5 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 	/// <summary>
 	/// Raises the state changed event
 	/// </summary>
-	protected virtual void OnStateChanged()
-	{
-		StateChanged?.Invoke(this, EventArgs.Empty);
-	}
+	protected virtual void OnStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
 }

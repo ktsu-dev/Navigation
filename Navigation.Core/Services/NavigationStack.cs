@@ -16,25 +16,15 @@ using ktsu.Navigation.Core.Models;
 /// A navigation stack implementation that supports undo/redo and persistence
 /// </summary>
 /// <typeparam name="T">The type of navigation items in the stack</typeparam>
-public class Navigation<T> : INavigation<T> where T : INavigationItem
+/// <remarks>
+/// Initializes a new instance of the <see cref="Navigation{T}"/> class
+/// </remarks>
+/// <param name="undoRedoProvider">Optional undo/redo provider</param>
+/// <param name="persistenceProvider">Optional persistence provider</param>
+public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null) : INavigation<T> where T : INavigationItem
 {
-	private readonly List<T> _items;
-	private readonly IUndoRedoProvider? _undoRedoProvider;
-	private readonly IPersistenceProvider<T>? _persistenceProvider;
-	private int _currentIndex;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="Navigation{T}"/> class
-	/// </summary>
-	/// <param name="undoRedoProvider">Optional undo/redo provider</param>
-	/// <param name="persistenceProvider">Optional persistence provider</param>
-	public Navigation(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null)
-	{
-		_items = new List<T>();
-		_currentIndex = -1;
-		_undoRedoProvider = undoRedoProvider;
-		_persistenceProvider = persistenceProvider;
-	}
+	private readonly List<T> _items = [];
+	private int _currentIndex = -1;
 
 	/// <inheritdoc />
 	public T? Current => _currentIndex >= 0 && _currentIndex < _items.Count ? _items[_currentIndex] : default;
@@ -59,10 +49,10 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 		var previousItem = Current;
 
 		// Create undoable action if undo/redo provider is available
-		if (_undoRedoProvider != null)
+		if (undoRedoProvider != null)
 		{
-			var action = new NavigateToAction<T>(this, item, _currentIndex, _items.ToList());
-			_undoRedoProvider.RegisterAction(action, $"Navigate to {item.DisplayName}");
+			var action = new NavigateToAction<T>(this, item, _currentIndex, [.. _items]);
+			undoRedoProvider.RegisterAction(action, $"Navigate to {item.DisplayName}");
 		}
 
 		// Remove any forward history when navigating to a new item
@@ -114,7 +104,7 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 		_items.Clear();
 		_currentIndex = -1;
 
-		OnNavigationChanged(NavigationType.Clear, previousItem, default(T?));
+		OnNavigationChanged(NavigationType.Clear, previousItem, default);
 	}
 
 	/// <inheritdoc />
@@ -136,13 +126,13 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 	/// <returns>A task representing the asynchronous save operation</returns>
 	public async Task SaveStateAsync(CancellationToken cancellationToken = default)
 	{
-		if (_persistenceProvider == null)
+		if (persistenceProvider == null)
 		{
 			return;
 		}
 
 		var state = NavigationState<T>.FromNavigationStack(this);
-		await _persistenceProvider.SaveStateAsync(state, cancellationToken);
+		await persistenceProvider.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -152,12 +142,12 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 	/// <returns>A task representing the asynchronous load operation</returns>
 	public async Task<bool> LoadStateAsync(CancellationToken cancellationToken = default)
 	{
-		if (_persistenceProvider == null)
+		if (persistenceProvider == null)
 		{
 			return false;
 		}
 
-		var state = await _persistenceProvider.LoadStateAsync(cancellationToken);
+		var state = await persistenceProvider.LoadStateAsync(cancellationToken).ConfigureAwait(false);
 		if (state == null)
 		{
 			return false;
@@ -167,7 +157,7 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 		_items.AddRange(state.Items);
 		_currentIndex = state.CurrentIndex;
 
-		OnNavigationChanged(NavigationType.NavigateTo, default(T?), Current);
+		OnNavigationChanged(NavigationType.NavigateTo, default, Current);
 		return true;
 	}
 
@@ -193,8 +183,5 @@ public class Navigation<T> : INavigation<T> where T : INavigationItem
 	/// <param name="navigationType">The type of navigation</param>
 	/// <param name="previousItem">The previous item</param>
 	/// <param name="currentItem">The current item</param>
-	protected virtual void OnNavigationChanged(NavigationType navigationType, T? previousItem, T? currentItem)
-	{
-		NavigationChanged?.Invoke(this, new NavigationEventArgs<T>(navigationType, previousItem, currentItem));
-	}
+	protected virtual void OnNavigationChanged(NavigationType navigationType, T? previousItem, T? currentItem) => NavigationChanged?.Invoke(this, new NavigationEventArgs<T>(navigationType, previousItem, currentItem));
 }

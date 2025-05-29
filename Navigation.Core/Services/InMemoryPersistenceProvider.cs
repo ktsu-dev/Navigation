@@ -24,16 +24,10 @@ public class InMemoryPersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	/// <inheritdoc />
-	public Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default)
-	{
-		return Task.FromResult(_savedState);
-	}
+	public Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default) => Task.FromResult(_savedState);
 
 	/// <inheritdoc />
-	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default)
-	{
-		return Task.FromResult(_savedState != null);
-	}
+	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default) => Task.FromResult(_savedState != null);
 
 	/// <inheritdoc />
 	public Task ClearSavedStateAsync(CancellationToken cancellationToken = default)

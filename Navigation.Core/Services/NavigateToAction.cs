@@ -13,27 +13,18 @@ using ktsu.Navigation.Core.Contracts;
 /// An undoable action for navigation operations
 /// </summary>
 /// <typeparam name="T">The type of navigation items</typeparam>
-internal class NavigateToAction<T> : IUndoableAction where T : INavigationItem
+/// <remarks>
+/// Initializes a new instance of the <see cref="NavigateToAction{T}"/> class
+/// </remarks>
+/// <param name="navigation">The navigation instance</param>
+/// <param name="newItem">The new item to navigate to</param>
+/// <param name="previousIndex">The previous current index</param>
+/// <param name="previousItems">The previous items in the stack</param>
+internal class NavigateToAction<T>(Navigation<T> navigation, T newItem, int previousIndex, List<T> previousItems) : IUndoableAction where T : INavigationItem
 {
-	private readonly Navigation<T> _navigation;
-	private readonly T _newItem;
-	private readonly int _previousIndex;
-	private readonly List<T> _previousItems;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="NavigateToAction{T}"/> class
-	/// </summary>
-	/// <param name="navigation">The navigation instance</param>
-	/// <param name="newItem">The new item to navigate to</param>
-	/// <param name="previousIndex">The previous current index</param>
-	/// <param name="previousItems">The previous items in the stack</param>
-	public NavigateToAction(Navigation<T> navigation, T newItem, int previousIndex, List<T> previousItems)
-	{
-		_navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
-		_newItem = newItem ?? throw new ArgumentNullException(nameof(newItem));
-		_previousIndex = previousIndex;
-		_previousItems = previousItems?.ToList() ?? throw new ArgumentNullException(nameof(previousItems));
-	}
+	private readonly Navigation<T> _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+	private readonly T _newItem = newItem ?? throw new ArgumentNullException(nameof(newItem));
+	private readonly List<T> _previousItems = previousItems?.ToList() ?? throw new ArgumentNullException(nameof(previousItems));
 
 	/// <inheritdoc />
 	public string Description => $"Navigate to {_newItem.DisplayName}";
@@ -46,8 +37,5 @@ internal class NavigateToAction<T> : IUndoableAction where T : INavigationItem
 	}
 
 	/// <inheritdoc />
-	public void Undo()
-	{
-		_navigation.RestoreState(_previousItems, _previousIndex);
-	}
+	public void Undo() => _navigation.RestoreState(_previousItems, previousIndex);
 }

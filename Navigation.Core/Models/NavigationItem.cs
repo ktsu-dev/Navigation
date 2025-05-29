@@ -36,7 +36,7 @@ public class NavigationItem : INavigationItem
 		Id = id;
 		DisplayName = displayName;
 		CreatedAt = DateTime.UtcNow;
-		_metadata = new Dictionary<string, object>();
+		_metadata = [];
 	}
 
 	/// <inheritdoc />
@@ -65,29 +65,13 @@ public class NavigationItem : INavigationItem
 	}
 
 	/// <inheritdoc />
-	public bool RemoveMetadata(string key)
-	{
-		if (string.IsNullOrWhiteSpace(key))
-		{
-			return false;
-		}
-
-		return _metadata.Remove(key);
-	}
+	public bool RemoveMetadata(string key) => !string.IsNullOrWhiteSpace(key) && _metadata.Remove(key);
 
 	/// <inheritdoc />
 	public override string ToString() => DisplayName;
 
 	/// <inheritdoc />
-	public override bool Equals(object? obj)
-	{
-		if (obj is NavigationItem other)
-		{
-			return Id.Equals(other.Id, StringComparison.Ordinal);
-		}
-
-		return false;
-	}
+	public override bool Equals(object? obj) => obj is NavigationItem other && Id.Equals(other.Id, StringComparison.Ordinal);
 
 	/// <inheritdoc />
 	public override int GetHashCode() => Id.GetHashCode(StringComparison.Ordinal);

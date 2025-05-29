@@ -10,21 +10,13 @@ using ktsu.Navigation.Core.Contracts;
 /// <summary>
 /// A factory for creating navigation stacks with configured providers
 /// </summary>
-public class NavigationStackFactory
+/// <remarks>
+/// Initializes a new instance of the <see cref="NavigationStackFactory"/> class
+/// </remarks>
+/// <param name="defaultUndoRedoProvider">Default undo/redo provider to use</param>
+/// <param name="serviceProvider">Optional service provider for dependency injection</param>
+public class NavigationStackFactory(IUndoRedoProvider? defaultUndoRedoProvider = null, Func<Type, object?>? serviceProvider = null)
 {
-	private readonly IUndoRedoProvider? _defaultUndoRedoProvider;
-	private readonly Func<Type, object?>? _serviceProvider;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="NavigationStackFactory"/> class
-	/// </summary>
-	/// <param name="defaultUndoRedoProvider">Default undo/redo provider to use</param>
-	/// <param name="serviceProvider">Optional service provider for dependency injection</param>
-	public NavigationStackFactory(IUndoRedoProvider? defaultUndoRedoProvider = null, Func<Type, object?>? serviceProvider = null)
-	{
-		_defaultUndoRedoProvider = defaultUndoRedoProvider;
-		_serviceProvider = serviceProvider;
-	}
 
 	/// <summary>
 	/// Creates a new navigation stack with the default providers
@@ -33,8 +25,8 @@ public class NavigationStackFactory
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateNavigationStack<T>() where T : INavigationItem
 	{
-		var persistenceProvider = _serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
-		var undoRedoProvider = _serviceProvider?.Invoke(typeof(IUndoRedoProvider)) as IUndoRedoProvider ?? _defaultUndoRedoProvider;
+		var persistenceProvider = serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
+		var undoRedoProvider = serviceProvider?.Invoke(typeof(IUndoRedoProvider)) as IUndoRedoProvider ?? defaultUndoRedoProvider;
 
 		return new Navigation<T>(undoRedoProvider, persistenceProvider);
 	}
@@ -46,10 +38,8 @@ public class NavigationStackFactory
 	/// <param name="undoRedoProvider">The undo/redo provider to use</param>
 	/// <param name="persistenceProvider">The persistence provider to use</param>
 	/// <returns>A new navigation stack instance</returns>
-	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider? undoRedoProvider, IPersistenceProvider<T>? persistenceProvider) where T : INavigationItem
-	{
-		return new Navigation<T>(undoRedoProvider, persistenceProvider);
-	}
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
+	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider? undoRedoProvider, IPersistenceProvider<T>? persistenceProvider) where T : INavigationItem => new Navigation<T>(undoRedoProvider, persistenceProvider);
 
 	/// <summary>
 	/// Creates a new navigation stack with only an undo/redo provider
@@ -57,10 +47,8 @@ public class NavigationStackFactory
 	/// <typeparam name="T">The type of navigation items</typeparam>
 	/// <param name="undoRedoProvider">The undo/redo provider to use</param>
 	/// <returns>A new navigation stack instance</returns>
-	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider undoRedoProvider) where T : INavigationItem
-	{
-		return new Navigation<T>(undoRedoProvider);
-	}
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
+	public INavigation<T> CreateNavigationStack<T>(IUndoRedoProvider undoRedoProvider) where T : INavigationItem => new Navigation<T>(undoRedoProvider);
 
 	/// <summary>
 	/// Creates a new navigation stack with only a persistence provider
@@ -68,18 +56,13 @@ public class NavigationStackFactory
 	/// <typeparam name="T">The type of navigation items</typeparam>
 	/// <param name="persistenceProvider">The persistence provider to use</param>
 	/// <returns>A new navigation stack instance</returns>
-	public INavigation<T> CreateNavigationStack<T>(IPersistenceProvider<T> persistenceProvider) where T : INavigationItem
-	{
-		return new Navigation<T>(_defaultUndoRedoProvider, persistenceProvider);
-	}
+	public INavigation<T> CreateNavigationStack<T>(IPersistenceProvider<T> persistenceProvider) where T : INavigationItem => new Navigation<T>(defaultUndoRedoProvider, persistenceProvider);
 
 	/// <summary>
 	/// Creates a basic navigation stack without any providers
 	/// </summary>
 	/// <typeparam name="T">The type of navigation items</typeparam>
 	/// <returns>A new navigation stack instance</returns>
-	public INavigation<T> CreateBasicNavigationStack<T>() where T : INavigationItem
-	{
-		return new Navigation<T>();
-	}
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
+	public INavigation<T> CreateBasicNavigationStack<T>() where T : INavigationItem => new Navigation<T>();
 }

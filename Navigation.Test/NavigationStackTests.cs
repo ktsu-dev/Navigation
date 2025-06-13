@@ -3,10 +3,10 @@
 // Licensed under the MIT license.
 
 namespace ktsu.Navigation.Test;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ktsu.Navigation.Core.Contracts;
 using ktsu.Navigation.Core.Models;
 using ktsu.Navigation.Core.Services;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public class NavigationStackTests

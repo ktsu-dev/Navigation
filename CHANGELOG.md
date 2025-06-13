@@ -3,6 +3,7 @@
 Changes since v1.0.3:
 
 - Enhance project documentation and metadata ([@matt-edmondson](https://github.com/matt-edmondson))
+- Fix using directive placement in NavigationStackTests.cs for consistency with coding standards ([@matt-edmondson](https://github.com/matt-edmondson))
 ## v1.0.3 (patch)
 
 Changes since v1.0.2:

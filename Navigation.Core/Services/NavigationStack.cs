@@ -46,14 +46,11 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	{
 		ArgumentNullException.ThrowIfNull(item);
 
-		var previousItem = Current;
+		T? previousItem = Current;
 
-		// Create undoable action if undo/redo provider is available
-		if (undoRedoProvider != null)
-		{
-			var action = new NavigateToAction<T>(this, item, _currentIndex, [.. _items]);
-			undoRedoProvider.RegisterAction(action, $"Navigate to {item.DisplayName}");
-		}
+		// Capture state before navigation for undo
+		int beforeIndex = _currentIndex;
+		List<T> beforeItems = [.. _items];
 
 		// Remove any forward history when navigating to a new item
 		if (_currentIndex < _items.Count - 1)
@@ -63,6 +60,13 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 
 		_items.Add(item);
 		_currentIndex = _items.Count - 1;
+
+		// Create undoable action if undo/redo provider is available
+		if (undoRedoProvider != null)
+		{
+			NavigateToAction<T> action = new(this, beforeIndex, beforeItems, _currentIndex, [.. _items]);
+			undoRedoProvider.RegisterAction(action, $"Navigate to {item.DisplayName}");
+		}
 
 		OnNavigationChanged(NavigationType.NavigateTo, previousItem, Current);
 	}
@@ -75,7 +79,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return default;
 		}
 
-		var previousItem = Current;
+		T? previousItem = Current;
 		_currentIndex--;
 
 		OnNavigationChanged(NavigationType.GoBack, previousItem, Current);
@@ -90,7 +94,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return default;
 		}
 
-		var previousItem = Current;
+		T? previousItem = Current;
 		_currentIndex++;
 
 		OnNavigationChanged(NavigationType.GoForward, previousItem, Current);
@@ -100,7 +104,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <inheritdoc />
 	public void Clear()
 	{
-		var previousItem = Current;
+		T? previousItem = Current;
 		_items.Clear();
 		_currentIndex = -1;
 
@@ -131,7 +135,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return;
 		}
 
-		var state = NavigationState<T>.FromNavigationStack(this);
+		NavigationState<T> state = NavigationState<T>.FromNavigationStack(this);
 		await persistenceProvider.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 	}
 
@@ -147,7 +151,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return false;
 		}
 
-		var state = await persistenceProvider.LoadStateAsync(cancellationToken).ConfigureAwait(false);
+		INavigationState<T>? state = await persistenceProvider.LoadStateAsync(cancellationToken).ConfigureAwait(false);
 		if (state == null)
 		{
 			return false;
@@ -168,7 +172,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <param name="currentIndex">The current index to restore</param>
 	internal void RestoreState(IEnumerable<T> items, int currentIndex)
 	{
-		var previousItem = Current;
+		T? previousItem = Current;
 
 		_items.Clear();
 		_items.AddRange(items);

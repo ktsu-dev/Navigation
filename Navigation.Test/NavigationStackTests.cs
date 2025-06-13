@@ -40,7 +40,7 @@ public class NavigationStackTests
 	public void NavigateTo_SingleItem_SetsCurrent()
 	{
 		// Arrange
-		var item = new NavigationItem("1", "First Item");
+		NavigationItem item = new("1", "First Item");
 
 		// Act
 		_navigation!.NavigateTo(item);
@@ -56,8 +56,8 @@ public class NavigationStackTests
 	public void NavigateTo_MultipleItems_AllowsBackNavigation()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
 
 		// Act
 		_navigation!.NavigateTo(item1);
@@ -74,13 +74,13 @@ public class NavigationStackTests
 	public void GoBack_WithHistory_NavigatesToPrevious()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 
 		// Act
-		var result = _navigation.GoBack();
+		NavigationItem? result = _navigation.GoBack();
 
 		// Assert
 		Assert.AreEqual(item1, result);
@@ -93,14 +93,14 @@ public class NavigationStackTests
 	public void GoForward_WithForwardHistory_NavigatesToNext()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 		_navigation.GoBack();
 
 		// Act
-		var result = _navigation.GoForward();
+		NavigationItem? result = _navigation.GoForward();
 
 		// Assert
 		Assert.AreEqual(item2, result);
@@ -113,9 +113,9 @@ public class NavigationStackTests
 	public void NavigateTo_ClearsForwardHistory()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
-		var item3 = new NavigationItem("3", "Third Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
+		NavigationItem item3 = new("3", "Third Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 		_navigation.GoBack();
@@ -134,8 +134,8 @@ public class NavigationStackTests
 	public void Clear_RemovesAllItems()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 
@@ -153,14 +153,14 @@ public class NavigationStackTests
 	public void NavigationChanged_RaisedOnNavigation()
 	{
 		// Arrange
-		var eventRaised = false;
+		bool eventRaised = false;
 		NavigationEventArgs<NavigationItem>? eventArgs = null;
 		_navigation!.NavigationChanged += (sender, e) =>
 		{
 			eventRaised = true;
 			eventArgs = e;
 		};
-		var item = new NavigationItem("1", "First Item");
+		NavigationItem item = new("1", "First Item");
 
 		// Act
 		_navigation.NavigateTo(item);
@@ -177,8 +177,8 @@ public class NavigationStackTests
 	public void UndoRedo_WithUndoRedoProvider_WorksCorrectly()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
 		_navigation!.NavigateTo(item1);
 
 		// Act
@@ -200,15 +200,15 @@ public class NavigationStackTests
 	public void GetBackStack_ReturnsCorrectItems()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
-		var item3 = new NavigationItem("3", "Third Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
+		NavigationItem item3 = new("3", "Third Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 		_navigation.NavigateTo(item3);
 
 		// Act
-		var backStack = _navigation.GetBackStack();
+		IReadOnlyList<NavigationItem> backStack = _navigation.GetBackStack();
 
 		// Assert
 		Assert.AreEqual(2, backStack.Count);
@@ -220,9 +220,9 @@ public class NavigationStackTests
 	public void GetForwardStack_ReturnsCorrectItems()
 	{
 		// Arrange
-		var item1 = new NavigationItem("1", "First Item");
-		var item2 = new NavigationItem("2", "Second Item");
-		var item3 = new NavigationItem("3", "Third Item");
+		NavigationItem item1 = new("1", "First Item");
+		NavigationItem item2 = new("2", "Second Item");
+		NavigationItem item3 = new("3", "Third Item");
 		_navigation!.NavigateTo(item1);
 		_navigation.NavigateTo(item2);
 		_navigation.NavigateTo(item3);
@@ -230,7 +230,7 @@ public class NavigationStackTests
 		_navigation.GoBack();
 
 		// Act
-		var forwardStack = _navigation.GetForwardStack();
+		IReadOnlyList<NavigationItem> forwardStack = _navigation.GetForwardStack();
 
 		// Assert
 		Assert.AreEqual(2, forwardStack.Count);

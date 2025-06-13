@@ -24,7 +24,7 @@ public class NavigationState<T> : INavigationState<T> where T : INavigationItem
 	{
 		ArgumentNullException.ThrowIfNull(items);
 
-		var itemList = items.ToList();
+		List<T> itemList = [.. items];
 
 		if (currentIndex < -1 || currentIndex >= itemList.Count)
 		{
@@ -60,9 +60,9 @@ public class NavigationState<T> : INavigationState<T> where T : INavigationItem
 	{
 		ArgumentNullException.ThrowIfNull(navigation);
 
-		var history = navigation.GetHistory();
-		var current = navigation.Current;
-		var currentIndex = current != null ? history.ToList().FindIndex(item => item.Id == current.Id) : -1;
+		IReadOnlyList<T> history = navigation.GetHistory();
+		T? current = navigation.Current;
+		int currentIndex = current != null ? history.ToList().FindIndex(item => item.Id == current.Id) : -1;
 
 		return new NavigationState<T>(history, currentIndex);
 	}

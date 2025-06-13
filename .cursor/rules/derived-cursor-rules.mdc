@@ -34,6 +34,7 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
 *   Adhere to .NET naming conventions. Pay special attention to naming conventions for EventHandlers and types ending with "Stack".
     *   Types ending with "Stack" should be avoided (CA1711).
     *   EventHandlers should use the generic EventHandler<T> pattern (CA1003).
+*   Avoid using `var` keyword; use explicit type declarations instead.
 
 ## WORKFLOW & RELEASE RULES
 
@@ -55,6 +56,7 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
     *   Integration.md - How to integrate with external systems
     *   Examples.md - Comprehensive code examples
     *   Design-Decisions.md - Rationale behind architectural choices
+    *   implementation-analysis.md - Detailed analysis of the current implementation status, issues, and remaining work.
 
 ## DEBUGGING
 
@@ -68,6 +70,8 @@ The project follows a Contracts, Models, Services (CMS) architecture, adhering t
     *   Naming convention violations.
     *   Incorrect EventHandler usage.
     *   Usage of non-primary constructors.
+    *   Usage of `var` keyword instead of explicit types.
+*   Be aware of potential JSON serialization issues when using interfaces like `INavigationState<T>`. Concrete type registration or custom converters may be needed.
 
 ## PERSISTENCE
 

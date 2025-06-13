@@ -1,1 +1,1 @@
-Placeholder description, a single line concise description of the project, suitable for the package description in the nuget list UI.
+A robust .NET library for implementing navigation stacks with undo/redo support, persistence capabilities, and event-driven architecture. Perfect for applications requiring navigation state management.

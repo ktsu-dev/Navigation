@@ -1,1 +1,1 @@
-placeholder tags;use semicolons to separate tags;and spaces to separate words;
+navigation;undo;redo;stack;history;persistence;event-driven;browser-history;state-management;generic;async;json;serialization

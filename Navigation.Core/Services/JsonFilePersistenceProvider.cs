@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Core.Models;
 
 /// <summary>
 /// A JSON file-based persistence provider for navigation state
@@ -45,13 +46,13 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	{
 		ArgumentNullException.ThrowIfNull(state);
 
-		var directory = Path.GetDirectoryName(_filePath);
+		string? directory = Path.GetDirectoryName(_filePath);
 		if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
 		{
 			Directory.CreateDirectory(directory);
 		}
 
-		var json = JsonSerializer.Serialize(state, _jsonOptions);
+		string json = JsonSerializer.Serialize(state, _jsonOptions);
 		await File.WriteAllTextAsync(_filePath, json, cancellationToken).ConfigureAwait(false);
 	}
 
@@ -65,8 +66,8 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 
 		try
 		{
-			var json = await File.ReadAllTextAsync(_filePath, cancellationToken).ConfigureAwait(false);
-			return JsonSerializer.Deserialize<INavigationState<T>>(json, _jsonOptions);
+			string json = await File.ReadAllTextAsync(_filePath, cancellationToken).ConfigureAwait(false);
+			return JsonSerializer.Deserialize<NavigationState<T>>(json, _jsonOptions);
 		}
 		catch (JsonException)
 		{

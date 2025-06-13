@@ -25,8 +25,8 @@ public class NavigationStackFactory(IUndoRedoProvider? defaultUndoRedoProvider =
 	/// <returns>A new navigation stack instance</returns>
 	public INavigation<T> CreateNavigationStack<T>() where T : INavigationItem
 	{
-		var persistenceProvider = serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
-		var undoRedoProvider = serviceProvider?.Invoke(typeof(IUndoRedoProvider)) as IUndoRedoProvider ?? defaultUndoRedoProvider;
+		IPersistenceProvider<T>? persistenceProvider = serviceProvider?.Invoke(typeof(IPersistenceProvider<T>)) as IPersistenceProvider<T>;
+		IUndoRedoProvider? undoRedoProvider = serviceProvider?.Invoke(typeof(IUndoRedoProvider)) as IUndoRedoProvider ?? defaultUndoRedoProvider;
 
 		return new Navigation<T>(undoRedoProvider, persistenceProvider);
 	}

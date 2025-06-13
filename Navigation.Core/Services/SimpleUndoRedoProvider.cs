@@ -71,7 +71,7 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 			return false;
 		}
 
-		var action = _undoStack.Last();
+		IUndoableAction action = _undoStack.Last();
 		_undoStack.RemoveAt(_undoStack.Count - 1);
 
 		try
@@ -97,7 +97,7 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 			return false;
 		}
 
-		var action = _redoStack.Last();
+		IUndoableAction action = _redoStack.Last();
 		_redoStack.RemoveAt(_redoStack.Count - 1);
 
 		try

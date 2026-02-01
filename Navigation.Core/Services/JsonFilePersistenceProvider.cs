@@ -16,7 +16,7 @@ using ktsu.Navigation.Core.Models;
 /// A JSON file-based persistence provider for navigation state
 /// </summary>
 /// <typeparam name="T">The type of navigation items</typeparam>
-public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : INavigationItem
+public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : class, INavigationItem
 {
 	private readonly string _filePath;
 	private readonly JsonSerializerOptions _jsonOptions;
@@ -44,7 +44,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	/// <inheritdoc />
 	public async Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(state);
+		Ensure.NotNull(state);
 
 		string? directory = Path.GetDirectoryName(_filePath);
 		if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))

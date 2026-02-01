@@ -46,7 +46,7 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 	/// <inheritdoc />
 	public void RegisterAction(IUndoableAction action, string description)
 	{
-		ArgumentNullException.ThrowIfNull(action);
+		Ensure.NotNull(action);
 
 		// Add to undo stack
 		_undoStack.Add(action);

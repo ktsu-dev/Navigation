@@ -2,11 +2,13 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel)]
+
 namespace ktsu.Navigation.Test;
+
 using ktsu.Navigation.Core.Contracts;
 using ktsu.Navigation.Core.Models;
 using ktsu.Navigation.Core.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public class NavigationStackTests
@@ -211,7 +213,7 @@ public class NavigationStackTests
 		IReadOnlyList<NavigationItem> backStack = _navigation.GetBackStack();
 
 		// Assert
-		Assert.AreEqual(2, backStack.Count);
+		Assert.HasCount(2, backStack);
 		Assert.AreEqual(item1, backStack[0]);
 		Assert.AreEqual(item2, backStack[1]);
 	}
@@ -233,7 +235,7 @@ public class NavigationStackTests
 		IReadOnlyList<NavigationItem> forwardStack = _navigation.GetForwardStack();
 
 		// Assert
-		Assert.AreEqual(2, forwardStack.Count);
+		Assert.HasCount(2, forwardStack);
 		Assert.AreEqual(item2, forwardStack[0]);
 		Assert.AreEqual(item3, forwardStack[1]);
 	}

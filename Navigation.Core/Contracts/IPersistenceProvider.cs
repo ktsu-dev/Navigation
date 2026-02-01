@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 /// Defines the contract for persistence providers that can save and restore navigation state
 /// </summary>
 /// <typeparam name="T">The type of navigation items to persist</typeparam>
-public interface IPersistenceProvider<T> where T : INavigationItem
+public interface IPersistenceProvider<T> where T : class, INavigationItem
 {
 	/// <summary>
 	/// Saves the navigation state to persistent storage
@@ -49,7 +49,7 @@ public interface IPersistenceProvider<T> where T : INavigationItem
 /// Represents the state of a navigation stack that can be persisted
 /// </summary>
 /// <typeparam name="T">The type of navigation items</typeparam>
-public interface INavigationState<T> where T : INavigationItem
+public interface INavigationState<T> where T : class, INavigationItem
 {
 	/// <summary>
 	/// Gets the items in the navigation stack

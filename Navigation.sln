@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Core", "Navigation.Core\Navigation.Core.csproj", "1ddc46cf-8a3b-4324-8738-2c2081298008"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Core", "Navigation.Core\Navigation.Core.csproj", "{1ddc46cf-8a3b-4324-8738-2c2081298008}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Test", "Navigation.Test\Navigation.Test.csproj", "a801e7c9-36b5-474d-8067-516a44526556"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Navigation.Test", "Navigation.Test\Navigation.Test.csproj", "{a801e7c9-36b5-474d-8067-516a44526556}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

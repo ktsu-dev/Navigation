@@ -59,7 +59,7 @@ public class NavigationItem : INavigationItem
 			throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 		}
 
-		ArgumentNullException.ThrowIfNull(value);
+		Ensure.NotNull(value);
 
 		_metadata[key] = value;
 	}

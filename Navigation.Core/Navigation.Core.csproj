@@ -1,2 +1,17 @@
-<Project Sdk="ktsu.Sdk.Lib">
+<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="ktsu.Sdk" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" PrivateAssets="All" />
+    <PackageReference Include="Polyfill" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ktsu.Navigation.Test" />
+  </ItemGroup>
 </Project>

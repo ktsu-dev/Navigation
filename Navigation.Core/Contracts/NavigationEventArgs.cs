@@ -16,7 +16,7 @@ using System;
 /// <param name="navigationType">The type of navigation that occurred</param>
 /// <param name="previousItem">The previous navigation item</param>
 /// <param name="currentItem">The current navigation item</param>
-public class NavigationEventArgs<T>(NavigationType navigationType, T? previousItem, T? currentItem) : EventArgs where T : INavigationItem
+public class NavigationEventArgs<T>(NavigationType navigationType, T? previousItem, T? currentItem) : EventArgs where T : class, INavigationItem
 {
 
 	/// <summary>

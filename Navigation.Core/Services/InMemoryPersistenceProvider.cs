@@ -12,7 +12,7 @@ using ktsu.Navigation.Core.Contracts;
 /// An in-memory persistence provider for testing and simple scenarios
 /// </summary>
 /// <typeparam name="T">The type of navigation items</typeparam>
-public class InMemoryPersistenceProvider<T> : IPersistenceProvider<T> where T : INavigationItem
+public class InMemoryPersistenceProvider<T> : IPersistenceProvider<T> where T : class, INavigationItem
 {
 	private INavigationState<T>? _savedState;
 

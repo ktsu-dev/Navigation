@@ -21,7 +21,7 @@ using ktsu.Navigation.Core.Models;
 /// </remarks>
 /// <param name="undoRedoProvider">Optional undo/redo provider</param>
 /// <param name="persistenceProvider">Optional persistence provider</param>
-public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null) : INavigation<T> where T : INavigationItem
+public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersistenceProvider<T>? persistenceProvider = null) : INavigation<T> where T : class, INavigationItem
 {
 	private readonly List<T> _items = [];
 	private int _currentIndex = -1;
@@ -44,7 +44,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <inheritdoc />
 	public void NavigateTo(T item)
 	{
-		ArgumentNullException.ThrowIfNull(item);
+		Ensure.NotNull(item);
 
 		T? previousItem = Current;
 

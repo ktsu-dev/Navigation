@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// Defines the contract for a navigation stack that supports undo/redo operations and persistence
 /// </summary>
 /// <typeparam name="T">The type of navigation items in the stack</typeparam>
-public interface INavigation<T> where T : INavigationItem
+public interface INavigation<T> where T : class, INavigationItem
 {
 	/// <summary>
 	/// Gets the current item in the navigation stack

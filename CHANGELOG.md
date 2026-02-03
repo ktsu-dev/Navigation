@@ -4,6 +4,8 @@ Changes since v1.0.6:
 
 - Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
 - Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
 ## v1.0.6 (patch)
 
 Changes since v1.0.5:

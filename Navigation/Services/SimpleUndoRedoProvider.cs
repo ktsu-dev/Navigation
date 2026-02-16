@@ -2,12 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Services;
+namespace ktsu.Navigation.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Contracts;
 
 /// <summary>
 /// A simple implementation of an undo/redo provider

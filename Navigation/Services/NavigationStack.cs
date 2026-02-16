@@ -2,15 +2,15 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Services;
+namespace ktsu.Navigation.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ktsu.Navigation.Core.Contracts;
-using ktsu.Navigation.Core.Models;
+using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Models;
 
 /// <summary>
 /// A navigation stack implementation that supports undo/redo and persistence

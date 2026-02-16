@@ -7,12 +7,12 @@ This document provides comprehensive code examples for common scenarios and adva
 ### Simple Navigation Stack
 
 ```csharp
-using ktsu.Navigation.Core.Contracts;
-using ktsu.Navigation.Core.Models;
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Models;
+using ktsu.Navigation.Services;
 
 // Create a basic navigation stack
-var navigationStack = new NavigationStack<NavigationItem>();
+var navigationStack = new Navigation<NavigationItem>();
 
 // Create navigation items
 var home = new NavigationItem("home", "Home");
@@ -46,7 +46,7 @@ Console.WriteLine($"Total items: {navigationStack.Count}"); // 3
 ### With Event Handling
 
 ```csharp
-var navigationStack = new NavigationStack<NavigationItem>();
+var navigationStack = new Navigation<NavigationItem>();
 
 // Subscribe to navigation events
 navigationStack.NavigationChanged += (sender, e) =>
@@ -123,7 +123,7 @@ public class WebPageNavigationItem : INavigationItem
 }
 
 // Usage
-var navigationStack = new NavigationStack<WebPageNavigationItem>();
+var navigationStack = new Navigation<WebPageNavigationItem>();
 
 var homePage = new WebPageNavigationItem("home", "Home Page", "/");
 homePage.SetMetadata("pageType", "landing");
@@ -150,7 +150,7 @@ Console.WriteLine($"Full URL: {productPage.GetFullUrl()}");
 var undoRedoProvider = new SimpleUndoRedoProvider(maxHistorySize: 10);
 
 // Create navigation stack with undo support
-var navigationStack = new NavigationStack<NavigationItem>(undoRedoProvider);
+var navigationStack = new Navigation<NavigationItem>(undoRedoProvider);
 
 // Listen to undo/redo state changes
 undoRedoProvider.StateChanged += (sender, e) =>
@@ -201,7 +201,7 @@ if (undoRedoProvider.CanRedo)
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("navigation.json");
 
 // Create navigation stack with persistence
-var navigationStack = new NavigationStack<NavigationItem>(null, persistenceProvider);
+var navigationStack = new Navigation<NavigationItem>(null, persistenceProvider);
 
 // Try to load previous state
 if (await navigationStack.LoadStateAsync())
@@ -228,7 +228,7 @@ Console.WriteLine("Navigation state saved");
 
 ```csharp
 var memoryProvider = new InMemoryPersistenceProvider<NavigationItem>();
-var navigationStack = new NavigationStack<NavigationItem>(null, memoryProvider);
+var navigationStack = new Navigation<NavigationItem>(null, memoryProvider);
 
 // Add some navigation items
 navigationStack.NavigateTo(new NavigationItem("1", "Page 1"));
@@ -238,7 +238,7 @@ navigationStack.NavigateTo(new NavigationItem("2", "Page 2"));
 await navigationStack.SaveStateAsync();
 
 // Create a new stack and load the state
-var newStack = new NavigationStack<NavigationItem>(null, memoryProvider);
+var newStack = new Navigation<NavigationItem>(null, memoryProvider);
 var loaded = await newStack.LoadStateAsync();
 
 Console.WriteLine($"State loaded: {loaded}");
@@ -251,16 +251,16 @@ Console.WriteLine($"Can go back: {newStack.CanGoBack}"); // True
 ```csharp
 // Set up factory with default providers
 var defaultUndoProvider = new SimpleUndoRedoProvider();
-var factory = new NavigationStackFactory(defaultUndoProvider);
+var factory = new NavigationFactory(defaultUndoProvider);
 
 // Create different types of navigation stacks
-var basicStack = factory.CreateBasicNavigationStack<NavigationItem>();
-var undoStack = factory.CreateNavigationStack<NavigationItem>();
-var persistentStack = factory.CreateNavigationStack<NavigationItem>(
+var basicStack = factory.CreateBasicNavigation<NavigationItem>();
+var undoStack = factory.CreateNavigation<NavigationItem>();
+var persistentStack = factory.CreateNavigation<NavigationItem>(
     new JsonFilePersistenceProvider<NavigationItem>("nav.json"));
 
 // Full-featured stack
-var fullStack = factory.CreateNavigationStack<NavigationItem>(
+var fullStack = factory.CreateNavigation<NavigationItem>(
     new SimpleUndoRedoProvider(50),
     new JsonFilePersistenceProvider<NavigationItem>("full-nav.json"));
 ```
@@ -272,11 +272,11 @@ var fullStack = factory.CreateNavigationStack<NavigationItem>(
 ```csharp
 public class WebNavigationManager
 {
-    private readonly INavigationStack<WebPageNavigationItem> _navigationStack;
+    private readonly INavigation<WebPageNavigationItem> _navigationStack;
     private readonly ILogger<WebNavigationManager> _logger;
 
     public WebNavigationManager(
-        INavigationStack<WebPageNavigationItem> navigationStack,
+        INavigation<WebPageNavigationItem> navigationStack,
         ILogger<WebNavigationManager> logger)
     {
         _navigationStack = navigationStack;
@@ -301,7 +301,7 @@ public class WebNavigationManager
         _navigationStack.NavigateTo(item);
 
         // Save state for session persistence
-        if (_navigationStack is NavigationStack<WebPageNavigationItem> stack)
+        if (_navigationStack is Navigation<WebPageNavigationItem> stack)
         {
             await stack.SaveStateAsync();
         }
@@ -342,7 +342,7 @@ public class WebNavigationManager
 
     public async Task RestoreSessionAsync()
     {
-        if (_navigationStack is NavigationStack<WebPageNavigationItem> stack)
+        if (_navigationStack is Navigation<WebPageNavigationItem> stack)
         {
             var restored = await stack.LoadStateAsync();
             if (restored)
@@ -437,12 +437,12 @@ public class ViewNavigationItem : INavigationItem
 
 public class DesktopNavigationService
 {
-    private readonly INavigationStack<ViewNavigationItem> _navigationStack;
+    private readonly INavigation<ViewNavigationItem> _navigationStack;
     private readonly IServiceProvider _serviceProvider;
     private readonly Window _mainWindow;
 
     public DesktopNavigationService(
-        INavigationStack<ViewNavigationItem> navigationStack,
+        INavigation<ViewNavigationItem> navigationStack,
         IServiceProvider serviceProvider,
         Window mainWindow)
     {
@@ -478,7 +478,7 @@ public class DesktopNavigationService
         _navigationStack.NavigateTo(item);
 
         // Save navigation state
-        if (_navigationStack is NavigationStack<ViewNavigationItem> stack)
+        if (_navigationStack is Navigation<ViewNavigationItem> stack)
         {
             await stack.SaveStateAsync();
         }
@@ -500,7 +500,7 @@ public class DesktopNavigationService
 
         _navigationStack.NavigateTo(item);
 
-        if (_navigationStack is NavigationStack<ViewNavigationItem> stack)
+        if (_navigationStack is Navigation<ViewNavigationItem> stack)
         {
             await stack.SaveStateAsync();
         }
@@ -580,7 +580,7 @@ public interface IParameterReceiver
 ```csharp
 public class TabNavigationManager
 {
-    private readonly Dictionary<string, INavigationStack<NavigationItem>> _tabStacks = new();
+    private readonly Dictionary<string, INavigation<NavigationItem>> _tabStacks = new();
     private readonly IUndoRedoProvider _globalUndoRedoProvider;
     private string? _activeTabId;
 
@@ -597,7 +597,7 @@ public class TabNavigationManager
     {
         tabId ??= Guid.NewGuid().ToString();
 
-        var navigationStack = new NavigationStack<NavigationItem>(_globalUndoRedoProvider);
+        var navigationStack = new Navigation<NavigationItem>(_globalUndoRedoProvider);
         navigationStack.NavigationChanged += (s, e) => OnTabNavigationChanged(tabId, e);
 
         _tabStacks[tabId] = navigationStack;
@@ -678,12 +678,12 @@ public class TabNavigationManager
         }
     }
 
-    public INavigationStack<NavigationItem>? GetActiveTabStack()
+    public INavigation<NavigationItem>? GetActiveTabStack()
     {
         return _activeTabId != null ? _tabStacks.GetValueOrDefault(_activeTabId) : null;
     }
 
-    public IReadOnlyDictionary<string, INavigationStack<NavigationItem>> GetAllTabs()
+    public IReadOnlyDictionary<string, INavigation<NavigationItem>> GetAllTabs()
     {
         return _tabStacks.AsReadOnly();
     }
@@ -757,7 +757,7 @@ public class NavigationExampleTests
     public void BasicNavigation_WorksCorrectly()
     {
         // Arrange
-        var stack = new NavigationStack<NavigationItem>();
+        var stack = new Navigation<NavigationItem>();
         var item1 = new NavigationItem("1", "Page 1");
         var item2 = new NavigationItem("2", "Page 2");
 
@@ -777,7 +777,7 @@ public class NavigationExampleTests
     {
         // Arrange
         var provider = new InMemoryPersistenceProvider<NavigationItem>();
-        var stack1 = new NavigationStack<NavigationItem>(null, provider);
+        var stack1 = new Navigation<NavigationItem>(null, provider);
 
         var item1 = new NavigationItem("1", "Page 1");
         var item2 = new NavigationItem("2", "Page 2");
@@ -787,7 +787,7 @@ public class NavigationExampleTests
         stack1.NavigateTo(item2);
         await stack1.SaveStateAsync();
 
-        var stack2 = new NavigationStack<NavigationItem>(null, provider);
+        var stack2 = new Navigation<NavigationItem>(null, provider);
         var loaded = await stack2.LoadStateAsync();
 
         // Assert
@@ -802,7 +802,7 @@ public class NavigationExampleTests
     {
         // Arrange
         var undoProvider = new SimpleUndoRedoProvider();
-        var stack = new NavigationStack<NavigationItem>(undoProvider);
+        var stack = new Navigation<NavigationItem>(undoProvider);
 
         var item1 = new NavigationItem("1", "Page 1");
         var item2 = new NavigationItem("2", "Page 2");
@@ -824,7 +824,7 @@ public class NavigationExampleTests
     public void NavigationEvents_FireCorrectly()
     {
         // Arrange
-        var stack = new NavigationStack<NavigationItem>();
+        var stack = new Navigation<NavigationItem>();
         var eventsFired = new List<NavigationEventArgs<NavigationItem>>();
 
         stack.NavigationChanged += (s, e) => eventsFired.Add(e);

@@ -18,12 +18,12 @@ The Navigation Stack Library provides a robust, extensible solution for managing
 ## Quick Start
 
 ```csharp
-using ktsu.Navigation.Core.Contracts;
-using ktsu.Navigation.Core.Models;
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Models;
+using ktsu.Navigation.Services;
 
 // Create a navigation stack
-var navigationStack = new NavigationStack<NavigationItem>();
+var navigationStack = new Navigation<NavigationItem>();
 
 // Create navigation items
 var homeItem = new NavigationItem("home", "Home Page");
@@ -54,7 +54,7 @@ Console.WriteLine($"Current: {navigationStack.Current?.DisplayName}");
 ## Installation
 
 ```xml
-<PackageReference Include="ktsu.Navigation.Core" Version="1.0.0" />
+<PackageReference Include="ktsu.Navigation" Version="1.0.0" />
 ```
 
 ## Requirements

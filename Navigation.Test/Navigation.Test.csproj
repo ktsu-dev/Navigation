@@ -8,6 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Navigation.Core\Navigation.Core.csproj" />
+    <ProjectReference Include="..\Navigation\Navigation.csproj" />
   </ItemGroup>
 </Project>

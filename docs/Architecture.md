@@ -23,7 +23,7 @@ Navigation.Core/
 
 Key interfaces:
 
--   `INavigationStack<T>` - Core navigation functionality
+-   `INavigation<T>` - Core navigation functionality
 -   `INavigationItem` - Contract for navigable items
 -   `IUndoRedoProvider` - External undo/redo integration
 -   `IPersistenceProvider<T>` - Persistence abstraction
@@ -49,11 +49,11 @@ Key models:
 
 Key services:
 
--   `NavigationStack<T>` - Core navigation implementation
+-   `Navigation<T>` - Core navigation implementation
 -   `SimpleUndoRedoProvider` - Built-in undo/redo functionality
 -   `InMemoryPersistenceProvider<T>` - Memory-based persistence
 -   `JsonFilePersistenceProvider<T>` - File-based persistence
--   `NavigationStackFactory` - Factory for creating configured instances
+-   `NavigationFactory` - Factory for creating configured instances
 
 ## SOLID Principles Implementation
 
@@ -61,7 +61,7 @@ Key services:
 
 Each class has a single, well-defined responsibility:
 
--   `NavigationStack<T>` - Manages navigation state and operations
+-   `Navigation<T>` - Manages navigation state and operations
 -   `SimpleUndoRedoProvider` - Handles undo/redo operations
 -   `JsonFilePersistenceProvider<T>` - Manages JSON file persistence
 -   `NavigationItem` - Represents a single navigation item
@@ -78,7 +78,7 @@ The library is open for extension but closed for modification:
 
 All implementations can be substituted for their abstractions:
 
--   Any `IPersistenceProvider<T>` implementation works with `NavigationStack<T>`
+-   Any `IPersistenceProvider<T>` implementation works with `Navigation<T>`
 -   Any `IUndoRedoProvider` implementation integrates seamlessly
 -   Custom `INavigationItem` implementations are fully supported
 
@@ -94,7 +94,7 @@ Interfaces are focused and minimal:
 
 High-level modules depend on abstractions:
 
--   `NavigationStack<T>` depends on `IUndoRedoProvider` and `IPersistenceProvider<T>`
+-   `Navigation<T>` depends on `IUndoRedoProvider` and `IPersistenceProvider<T>`
 -   No direct dependencies on concrete implementations
 -   Factory pattern enables dependency injection
 
@@ -105,7 +105,7 @@ High-level modules depend on abstractions:
 The central component managing navigation state:
 
 ```csharp
-public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
+public class Navigation<T> : INavigation<T> where T : INavigationItem
 {
     private readonly List<T> _items;
     private readonly IUndoRedoProvider? _undoRedoProvider;
@@ -169,7 +169,7 @@ public class NavigationEventArgs<T> : EventArgs where T : INavigationItem
 ### Navigation Operation Flow
 
 1. User calls `NavigateTo(item)`
-2. `NavigationStack<T>` validates the operation
+2. `Navigation<T>` validates the operation
 3. Undo action is created and registered with provider
 4. Navigation state is updated
 5. Events are raised to notify listeners

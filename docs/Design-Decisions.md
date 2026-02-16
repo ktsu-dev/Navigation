@@ -8,7 +8,7 @@ This document explains the key design decisions and architectural choices made i
 
 #### Single Responsibility Principle (SRP)
 
--   **INavigationStack**: Manages only navigation operations
+-   **INavigation**: Manages only navigation operations
 -   **IUndoRedoProvider**: Handles only undo/redo functionality
 -   **IPersistenceProvider**: Responsible only for state persistence
 -   **INavigationItem**: Represents only navigation data
@@ -57,7 +57,7 @@ This document explains the key design decisions and architectural choices made i
 ### Generic Type Constraints
 
 ```csharp
-public interface INavigationStack<T> where T : INavigationItem
+public interface INavigation<T> where T : INavigationItem
 ```
 
 **Decision**: Use generic type constraints for navigation items.
@@ -124,7 +124,7 @@ Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationTok
 ### Optional Providers
 
 ```csharp
-public NavigationStack(IUndoRedoProvider? undoRedoProvider = null,
+public Navigation(IUndoRedoProvider? undoRedoProvider = null,
                       IPersistenceProvider<T>? persistenceProvider = null)
 ```
 
@@ -313,10 +313,10 @@ public JsonFilePersistenceProvider(string filePath, JsonSerializerOptions? jsonO
 
 ```csharp
 // Simple factory usage
-var stack = factory.CreateBasicNavigationStack<NavigationItem>();
+var stack = factory.CreateBasicNavigation<NavigationItem>();
 
 // Advanced direct usage
-var stack = new NavigationStack<NavigationItem>(customUndoProvider, customPersistenceProvider);
+var stack = new Navigation<NavigationItem>(customUndoProvider, customPersistenceProvider);
 ```
 
 ## Metadata Design

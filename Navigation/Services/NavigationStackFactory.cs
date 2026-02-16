@@ -2,10 +2,10 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Services;
+namespace ktsu.Navigation.Services;
 
 using System;
-using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Contracts;
 
 /// <summary>
 /// A factory for creating navigation stacks with configured providers

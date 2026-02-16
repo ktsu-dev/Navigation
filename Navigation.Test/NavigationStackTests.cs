@@ -6,9 +6,9 @@
 
 namespace ktsu.Navigation.Test;
 
-using ktsu.Navigation.Core.Contracts;
-using ktsu.Navigation.Core.Models;
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Models;
+using ktsu.Navigation.Services;
 
 [TestClass]
 public class NavigationStackTests

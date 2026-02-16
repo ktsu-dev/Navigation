@@ -2,11 +2,11 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Services;
+namespace ktsu.Navigation.Services;
 
 using System.Threading;
 using System.Threading.Tasks;
-using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Contracts;
 
 /// <summary>
 /// An in-memory persistence provider for testing and simple scenarios

@@ -2,12 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Models;
+namespace ktsu.Navigation.Models;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Contracts;
 
 /// <summary>
 /// Represents the state of a navigation stack that can be persisted

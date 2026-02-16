@@ -15,14 +15,14 @@ public void ConfigureServices(IServiceCollection services)
     // Register core services
     services.AddSingleton<IUndoRedoProvider, SimpleUndoRedoProvider>();
     services.AddScoped(typeof(IPersistenceProvider<>), typeof(JsonFilePersistenceProvider<>));
-    services.AddScoped<NavigationStackFactory>();
+    services.AddScoped<NavigationFactory>();
 
     // Register navigation stacks
-    services.AddScoped<INavigationStack<PageNavigationItem>>(provider =>
+    services.AddScoped<INavigation<PageNavigationItem>>(provider =>
     {
-        var factory = provider.GetRequiredService<NavigationStackFactory>();
+        var factory = provider.GetRequiredService<NavigationFactory>();
         var persistenceProvider = provider.GetRequiredService<IPersistenceProvider<PageNavigationItem>>();
-        return factory.CreateNavigationStack(persistenceProvider);
+        return factory.CreateNavigation(persistenceProvider);
     });
 
     // Register custom navigation items
@@ -34,9 +34,9 @@ public void ConfigureServices(IServiceCollection services)
 [Route("api/[controller]")]
 public class NavigationController : ControllerBase
 {
-    private readonly INavigationStack<PageNavigationItem> _navigationStack;
+    private readonly INavigation<PageNavigationItem> _navigationStack;
 
-    public NavigationController(INavigationStack<PageNavigationItem> navigationStack)
+    public NavigationController(INavigation<PageNavigationItem> navigationStack)
     {
         _navigationStack = navigationStack;
     }
@@ -47,7 +47,7 @@ public class NavigationController : ControllerBase
         var item = new PageNavigationItem(request.Id, request.DisplayName, request.Url);
         _navigationStack.NavigateTo(item);
 
-        if (_navigationStack is NavigationStack<PageNavigationItem> stack)
+        if (_navigationStack is Navigation<PageNavigationItem> stack)
         {
             await stack.SaveStateAsync();
         }
@@ -88,14 +88,14 @@ public partial class App : Application
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                            "MyApp", "navigation.json")));
 
-        services.AddSingleton<NavigationStackFactory>();
+        services.AddSingleton<NavigationFactory>();
 
-        services.AddSingleton<INavigationStack<ViewNavigationItem>>(provider =>
+        services.AddSingleton<INavigation<ViewNavigationItem>>(provider =>
         {
-            var factory = provider.GetRequiredService<NavigationStackFactory>();
+            var factory = provider.GetRequiredService<NavigationFactory>();
             var undoProvider = provider.GetRequiredService<IUndoRedoProvider>();
             var persistenceProvider = provider.GetRequiredService<IPersistenceProvider<ViewNavigationItem>>();
-            return factory.CreateNavigationStack(undoProvider, persistenceProvider);
+            return factory.CreateNavigation(undoProvider, persistenceProvider);
         });
 
         // ViewModels and Views
@@ -107,10 +107,10 @@ public partial class App : Application
 // MainViewModel.cs
 public class MainViewModel : INotifyPropertyChanged
 {
-    private readonly INavigationStack<ViewNavigationItem> _navigationStack;
+    private readonly INavigation<ViewNavigationItem> _navigationStack;
     private readonly IUndoRedoProvider _undoRedoProvider;
 
-    public MainViewModel(INavigationStack<ViewNavigationItem> navigationStack, IUndoRedoProvider undoRedoProvider)
+    public MainViewModel(INavigation<ViewNavigationItem> navigationStack, IUndoRedoProvider undoRedoProvider)
     {
         _navigationStack = navigationStack;
         _undoRedoProvider = undoRedoProvider;
@@ -156,17 +156,17 @@ public class NavigationModule : Module
                .InstancePerLifetimeScope();
 
         // Register factory
-        builder.RegisterType<NavigationStackFactory>()
+        builder.RegisterType<NavigationFactory>()
                .AsSelf()
                .SingleInstance();
 
         // Register navigation stacks
-        builder.Register<INavigationStack<NavigationItem>>(context =>
+        builder.Register<INavigation<NavigationItem>>(context =>
         {
-            var factory = context.Resolve<NavigationStackFactory>();
+            var factory = context.Resolve<NavigationFactory>();
             var undoProvider = context.Resolve<IUndoRedoProvider>();
             var persistenceProvider = context.Resolve<IPersistenceProvider<NavigationItem>>();
-            return factory.CreateNavigationStack(undoProvider, persistenceProvider);
+            return factory.CreateNavigation(undoProvider, persistenceProvider);
         }).InstancePerLifetimeScope();
     }
 }
@@ -176,7 +176,7 @@ var builder = new ContainerBuilder();
 builder.RegisterModule<NavigationModule>();
 var container = builder.Build();
 
-var navigationStack = container.Resolve<INavigationStack<NavigationItem>>();
+var navigationStack = container.Resolve<INavigation<NavigationItem>>();
 ```
 
 ## External Undo/Redo Integration
@@ -439,12 +439,12 @@ public class RedisPersistenceProvider<T> : IPersistenceProvider<T>
 // NavigationService.cs
 public class BlazorNavigationService
 {
-    private readonly INavigationStack<PageNavigationItem> _navigationStack;
+    private readonly INavigation<PageNavigationItem> _navigationStack;
     private readonly NavigationManager _navigationManager;
     private readonly IJSRuntime _jsRuntime;
 
     public BlazorNavigationService(
-        INavigationStack<PageNavigationItem> navigationStack,
+        INavigation<PageNavigationItem> navigationStack,
         NavigationManager navigationManager,
         IJSRuntime jsRuntime)
     {
@@ -483,10 +483,10 @@ public class BlazorNavigationService
 
 // In Program.cs
 builder.Services.AddScoped<BlazorNavigationService>();
-builder.Services.AddScoped<INavigationStack<PageNavigationItem>>(provider =>
+builder.Services.AddScoped<INavigation<PageNavigationItem>>(provider =>
 {
     var persistenceProvider = new JsonFilePersistenceProvider<PageNavigationItem>("blazor-nav.json");
-    return new NavigationStack<PageNavigationItem>(null, persistenceProvider);
+    return new Navigation<PageNavigationItem>(null, persistenceProvider);
 });
 ```
 
@@ -496,10 +496,10 @@ builder.Services.AddScoped<INavigationStack<PageNavigationItem>>(provider =>
 // MauiNavigationService.cs
 public class MauiNavigationService : INavigationService
 {
-    private readonly INavigationStack<PageNavigationItem> _navigationStack;
+    private readonly INavigation<PageNavigationItem> _navigationStack;
     private readonly IServiceProvider _serviceProvider;
 
-    public MauiNavigationService(INavigationStack<PageNavigationItem> navigationStack, IServiceProvider serviceProvider)
+    public MauiNavigationService(INavigation<PageNavigationItem> navigationStack, IServiceProvider serviceProvider)
     {
         _navigationStack = navigationStack;
         _serviceProvider = serviceProvider;
@@ -553,11 +553,11 @@ public static class MauiProgram
             .ConfigureFonts(fonts => fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"));
 
         // Register navigation services
-        builder.Services.AddSingleton<INavigationStack<PageNavigationItem>>(provider =>
+        builder.Services.AddSingleton<INavigation<PageNavigationItem>>(provider =>
         {
             var persistenceProvider = new JsonFilePersistenceProvider<PageNavigationItem>(
                 Path.Combine(FileSystem.AppDataDirectory, "navigation.json"));
-            return new NavigationStack<PageNavigationItem>(null, persistenceProvider);
+            return new Navigation<PageNavigationItem>(null, persistenceProvider);
         });
 
         builder.Services.AddSingleton<MauiNavigationService>();
@@ -577,7 +577,7 @@ public class NavigationIntegrationTests
 {
     private Mock<IUndoRedoProvider> _mockUndoRedoProvider;
     private Mock<IPersistenceProvider<NavigationItem>> _mockPersistenceProvider;
-    private INavigationStack<NavigationItem> _navigationStack;
+    private INavigation<NavigationItem> _navigationStack;
 
     [TestInitialize]
     public void Setup()
@@ -585,7 +585,7 @@ public class NavigationIntegrationTests
         _mockUndoRedoProvider = new Mock<IUndoRedoProvider>();
         _mockPersistenceProvider = new Mock<IPersistenceProvider<NavigationItem>>();
 
-        _navigationStack = new NavigationStack<NavigationItem>(
+        _navigationStack = new Navigation<NavigationItem>(
             _mockUndoRedoProvider.Object,
             _mockPersistenceProvider.Object);
     }
@@ -614,7 +614,7 @@ public class NavigationIntegrationTests
         _navigationStack.NavigateTo(item);
 
         // Act
-        await ((NavigationStack<NavigationItem>)_navigationStack).SaveStateAsync();
+        await ((Navigation<NavigationItem>)_navigationStack).SaveStateAsync();
 
         // Assert
         _mockPersistenceProvider.Verify(p => p.SaveStateAsync(
@@ -722,12 +722,12 @@ public class NavigationServiceFactory
         _config = config.Value;
     }
 
-    public INavigationStack<T> CreateNavigationStack<T>() where T : INavigationItem
+    public INavigation<T> CreateNavigation<T>() where T : INavigationItem
     {
         var undoProvider = CreateUndoRedoProvider();
         var persistenceProvider = CreatePersistenceProvider<T>();
 
-        return new NavigationStack<T>(undoProvider, persistenceProvider);
+        return new Navigation<T>(undoProvider, persistenceProvider);
     }
 
     private IUndoRedoProvider CreateUndoRedoProvider()

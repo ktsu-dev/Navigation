@@ -4,12 +4,12 @@ Complete API documentation for the Navigation Stack Library.
 
 ## Core Interfaces
 
-### INavigationStack&lt;T&gt;
+### INavigation&lt;T&gt;
 
 Main interface for navigation stack functionality.
 
 ```csharp
-public interface INavigationStack<T> where T : INavigationItem
+public interface INavigation<T> where T : INavigationItem
 ```
 
 #### Properties
@@ -159,18 +159,18 @@ public interface IUndoableAction
 
 ## Core Classes
 
-### NavigationStack&lt;T&gt;
+### Navigation&lt;T&gt;
 
 Main implementation of the navigation stack.
 
 ```csharp
-public class NavigationStack<T> : INavigationStack<T> where T : INavigationItem
+public class Navigation<T> : INavigation<T> where T : INavigationItem
 ```
 
 #### Constructors
 
 ```csharp
-public NavigationStack(IUndoRedoProvider? undoRedoProvider = null,
+public Navigation(IUndoRedoProvider? undoRedoProvider = null,
                       IPersistenceProvider<T>? persistenceProvider = null)
 ```
 
@@ -231,7 +231,7 @@ public NavigationState(IEnumerable<T> items, int currentIndex)
 
 | Method                                                     | Return Type          | Description                                            |
 | ---------------------------------------------------------- | -------------------- | ------------------------------------------------------ |
-| `FromNavigationStack(INavigationStack<T> navigationStack)` | `NavigationState<T>` | Creates a new navigation state from a navigation stack |
+| `FromNavigation(INavigation<T> navigationStack)` | `NavigationState<T>` | Creates a new navigation state from a navigation stack |
 
 ---
 
@@ -290,18 +290,18 @@ public JsonFilePersistenceProvider(string filePath, JsonSerializerOptions? jsonO
 
 ---
 
-### NavigationStackFactory
+### NavigationFactory
 
 Factory for creating navigation stacks with configured providers.
 
 ```csharp
-public class NavigationStackFactory
+public class NavigationFactory
 ```
 
 #### Constructors
 
 ```csharp
-public NavigationStackFactory(IUndoRedoProvider? defaultUndoRedoProvider = null,
+public NavigationFactory(IUndoRedoProvider? defaultUndoRedoProvider = null,
                              Func<Type, object?>? serviceProvider = null)
 ```
 
@@ -309,11 +309,11 @@ public NavigationStackFactory(IUndoRedoProvider? defaultUndoRedoProvider = null,
 
 | Method                                                                   | Return Type           | Description                                                 |
 | ------------------------------------------------------------------------ | --------------------- | ----------------------------------------------------------- |
-| `CreateNavigationStack<T>()`                                             | `INavigationStack<T>` | Creates a navigation stack with default providers           |
-| `CreateNavigationStack<T>(IUndoRedoProvider?, IPersistenceProvider<T>?)` | `INavigationStack<T>` | Creates a navigation stack with specific providers          |
-| `CreateNavigationStack<T>(IUndoRedoProvider)`                            | `INavigationStack<T>` | Creates a navigation stack with only an undo/redo provider  |
-| `CreateNavigationStack<T>(IPersistenceProvider<T>)`                      | `INavigationStack<T>` | Creates a navigation stack with only a persistence provider |
-| `CreateBasicNavigationStack<T>()`                                        | `INavigationStack<T>` | Creates a basic navigation stack without any providers      |
+| `CreateNavigation<T>()`                                             | `INavigation<T>` | Creates a navigation stack with default providers           |
+| `CreateNavigation<T>(IUndoRedoProvider?, IPersistenceProvider<T>?)` | `INavigation<T>` | Creates a navigation stack with specific providers          |
+| `CreateNavigation<T>(IUndoRedoProvider)`                            | `INavigation<T>` | Creates a navigation stack with only an undo/redo provider  |
+| `CreateNavigation<T>(IPersistenceProvider<T>)`                      | `INavigation<T>` | Creates a navigation stack with only a persistence provider |
+| `CreateBasicNavigation<T>()`                                        | `INavigation<T>` | Creates a basic navigation stack without any providers      |
 
 ## Events and Delegates
 
@@ -369,7 +369,7 @@ public enum NavigationType
 ### Basic Usage
 
 ```csharp
-var stack = new NavigationStack<NavigationItem>();
+var stack = new Navigation<NavigationItem>();
 var item = new NavigationItem("page1", "Page 1");
 stack.NavigateTo(item);
 ```
@@ -379,12 +379,12 @@ stack.NavigateTo(item);
 ```csharp
 var undoProvider = new SimpleUndoRedoProvider();
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("nav.json");
-var stack = new NavigationStack<NavigationItem>(undoProvider, persistenceProvider);
+var stack = new Navigation<NavigationItem>(undoProvider, persistenceProvider);
 ```
 
 ### Using Factory
 
 ```csharp
-var factory = new NavigationStackFactory();
-var stack = factory.CreateNavigationStack<NavigationItem>();
+var factory = new NavigationFactory();
+var stack = factory.CreateNavigation<NavigationItem>();
 ```

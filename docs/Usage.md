@@ -9,12 +9,12 @@ This guide covers common usage patterns, best practices, and real-world scenario
 The simplest way to use the library is with a basic navigation stack:
 
 ```csharp
-using ktsu.Navigation.Core.Contracts;
-using ktsu.Navigation.Core.Models;
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Models;
+using ktsu.Navigation.Services;
 
 // Create a navigation stack
-var navigationStack = new NavigationStack<NavigationItem>();
+var navigationStack = new Navigation<NavigationItem>();
 
 // Create and navigate to items
 var homeItem = new NavigationItem("home", "Home Page");
@@ -57,7 +57,7 @@ Add undo/redo functionality to your navigation:
 var undoProvider = new SimpleUndoRedoProvider(maxHistorySize: 50);
 
 // Create navigation stack with undo support
-var navigationStack = new NavigationStack<NavigationItem>(undoProvider);
+var navigationStack = new Navigation<NavigationItem>(undoProvider);
 
 // Navigate normally - operations are automatically undoable
 navigationStack.NavigateTo(homeItem);
@@ -91,7 +91,7 @@ Save and restore navigation state across application sessions:
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("navigation.json");
 
 // Create navigation stack with persistence
-var navigationStack = new NavigationStack<NavigationItem>(
+var navigationStack = new Navigation<NavigationItem>(
     undoRedoProvider: null,
     persistenceProvider: persistenceProvider);
 
@@ -119,7 +119,7 @@ var undoProvider = new SimpleUndoRedoProvider();
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("nav.json");
 
 // Create navigation stack with all features
-var navigationStack = new NavigationStack<NavigationItem>(undoProvider, persistenceProvider);
+var navigationStack = new Navigation<NavigationItem>(undoProvider, persistenceProvider);
 
 // Load previous state
 await navigationStack.LoadStateAsync();
@@ -213,16 +213,16 @@ Use the factory for consistent navigation stack creation:
 ```csharp
 // Set up factory with default providers
 var defaultUndoProvider = new SimpleUndoRedoProvider();
-var factory = new NavigationStackFactory(defaultUndoProvider);
+var factory = new NavigationFactory(defaultUndoProvider);
 
 // Create different types of navigation stacks
-var basicStack = factory.CreateBasicNavigationStack<NavigationItem>();
-var undoStack = factory.CreateNavigationStack<NavigationItem>(new SimpleUndoRedoProvider());
-var persistentStack = factory.CreateNavigationStack<NavigationItem>(
+var basicStack = factory.CreateBasicNavigation<NavigationItem>();
+var undoStack = factory.CreateNavigation<NavigationItem>(new SimpleUndoRedoProvider());
+var persistentStack = factory.CreateNavigation<NavigationItem>(
     new JsonFilePersistenceProvider<NavigationItem>("nav.json"));
 
 // With dependency injection
-var factory = new NavigationStackFactory(
+var factory = new NavigationFactory(
     defaultUndoProvider,
     serviceType => serviceProvider.GetService(serviceType));
 ```
@@ -234,9 +234,9 @@ var factory = new NavigationStackFactory(
 ```csharp
 public class NavigationManager<T> where T : INavigationItem
 {
-    private readonly INavigationStack<T> _navigationStack;
+    private readonly INavigation<T> _navigationStack;
 
-    public NavigationManager(INavigationStack<T> navigationStack)
+    public NavigationManager(INavigation<T> navigationStack)
     {
         _navigationStack = navigationStack;
         _navigationStack.NavigationChanged += OnNavigationChanged;
@@ -259,7 +259,7 @@ public class NavigationManager<T> where T : INavigationItem
 
     private async Task SaveNavigationStateAsync()
     {
-        if (_navigationStack is NavigationStack<T> stack)
+        if (_navigationStack is Navigation<T> stack)
         {
             await stack.SaveStateAsync();
         }
@@ -277,14 +277,14 @@ public class NavigationManager<T> where T : INavigationItem
 ### Error Handling
 
 ```csharp
-public async Task<bool> SafeNavigateAsync<T>(INavigationStack<T> stack, T item)
+public async Task<bool> SafeNavigateAsync<T>(INavigation<T> stack, T item)
     where T : INavigationItem
 {
     try
     {
         stack.NavigateTo(item);
 
-        if (stack is NavigationStack<T> persistentStack)
+        if (stack is Navigation<T> persistentStack)
         {
             await persistentStack.SaveStateAsync();
         }
@@ -332,7 +332,7 @@ public void Dispose()
 ```csharp
 public class WebNavigationService
 {
-    private readonly INavigationStack<PageNavigationItem> _navigationStack;
+    private readonly INavigation<PageNavigationItem> _navigationStack;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public async Task NavigateToPageAsync(string path, Dictionary<string, string> query = null)
@@ -370,7 +370,7 @@ public class WebNavigationService
 ```csharp
 public partial class MainWindow : Window
 {
-    private readonly INavigationStack<ViewNavigationItem> _navigationStack;
+    private readonly INavigation<ViewNavigationItem> _navigationStack;
 
     public MainWindow()
     {
@@ -381,7 +381,7 @@ public partial class MainWindow : Window
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "MyApp", "navigation.json"));
 
-        _navigationStack = new NavigationStack<ViewNavigationItem>(undoProvider, persistenceProvider);
+        _navigationStack = new Navigation<ViewNavigationItem>(undoProvider, persistenceProvider);
         _navigationStack.NavigationChanged += OnNavigationChanged;
 
         SetupCommands(undoProvider);
@@ -421,11 +421,11 @@ public partial class MainWindow : Window
 ```csharp
 public class BreadcrumbViewModel
 {
-    private readonly INavigationStack<NavigationItem> _navigationStack;
+    private readonly INavigation<NavigationItem> _navigationStack;
 
     public ObservableCollection<BreadcrumbItem> Breadcrumbs { get; } = new();
 
-    public BreadcrumbViewModel(INavigationStack<NavigationItem> navigationStack)
+    public BreadcrumbViewModel(INavigation<NavigationItem> navigationStack)
     {
         _navigationStack = navigationStack;
         _navigationStack.NavigationChanged += UpdateBreadcrumbs;
@@ -454,12 +454,12 @@ public class BreadcrumbViewModel
 ```csharp
 public class TabNavigationManager
 {
-    private readonly Dictionary<string, INavigationStack<NavigationItem>> _tabStacks = new();
+    private readonly Dictionary<string, INavigation<NavigationItem>> _tabStacks = new();
     private string _activeTab;
 
     public void CreateTab(string tabId)
     {
-        _tabStacks[tabId] = new NavigationStack<NavigationItem>();
+        _tabStacks[tabId] = new Navigation<NavigationItem>();
     }
 
     public void SwitchToTab(string tabId)

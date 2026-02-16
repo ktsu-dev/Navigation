@@ -59,15 +59,15 @@ dotnet add package ktsu.Navigation
 ### Basic Navigation
 
 ```csharp
-using ktsu.Navigation.Core.Models;
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Models;
+using ktsu.Navigation.Services;
 
 // Create navigation items
 var page1 = new NavigationItem("page1", "Home Page");
 var page2 = new NavigationItem("page2", "About Page");
 var page3 = new NavigationItem("page3", "Contact Page");
 
-// Create a basic navigation stack
+// Create a navigation stack
 var navigation = new Navigation<NavigationItem>();
 
 // Navigate through items
@@ -88,7 +88,7 @@ Console.WriteLine($"Can go forward: {navigation.CanGoForward}");
 ### With Undo/Redo Support
 
 ```csharp
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Services;
 
 // Create navigation with undo/redo support
 var undoRedoProvider = new SimpleUndoRedoProvider(maxHistorySize: 50);
@@ -107,11 +107,11 @@ undoRedoProvider.Redo();  // Forward to page2 again
 ### With Persistence
 
 ```csharp
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Services;
 
 // Create navigation with JSON file persistence
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("navigation-state.json");
-var navigation = new Navigation<NavigationItem>(persistenceProvider: persistenceProvider);
+var navigation = new Navigation<NavigationItem>(undoRedoProvider: null, persistenceProvider: persistenceProvider);
 
 navigation.NavigateTo(page1);
 navigation.NavigateTo(page2);
@@ -127,13 +127,13 @@ Console.WriteLine($"Restored to: {navigation.Current?.DisplayName}");
 ### Complete Example with All Features
 
 ```csharp
-using ktsu.Navigation.Core.Services;
+using ktsu.Navigation.Services;
 
 // Create providers
 var undoRedoProvider = new SimpleUndoRedoProvider();
 var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("app-navigation.json");
 
-// Create navigation stack with all features
+// Create navigation with all features
 var navigation = new Navigation<NavigationItem>(undoRedoProvider, persistenceProvider);
 
 // Subscribe to navigation events
@@ -146,7 +146,7 @@ navigation.NavigationChanged += (sender, e) =>
 
 // Use factory for easier creation
 var factory = new NavigationStackFactory(undoRedoProvider);
-var anotherNavigation = factory.CreateNavigationStack<NavigationItem>(persistenceProvider);
+var anotherNavigation = factory.CreateNavigationStack<NavigationItem>(undoRedoProvider, persistenceProvider);
 ```
 
 ### Custom Navigation Items
@@ -190,14 +190,14 @@ The library follows clean architecture principles with well-separated concerns:
 
 ### Key Interfaces
 
-- `INavigation<T>`: Main navigation stack operations
+- `INavigation<T>`: Main navigation operations interface
 - `INavigationItem`: Contract for items that can be navigated to
 - `IPersistenceProvider<T>`: Contract for persistence implementations
 - `IUndoRedoProvider`: Contract for undo/redo implementations
 
 ## Extension Points
 
-Create custom persistence providers:
+Create custom persistence providers by implementing the `IPersistenceProvider<T>` interface:
 
 ```csharp
 public class DatabasePersistenceProvider<T> : IPersistenceProvider<T> where T : INavigationItem
@@ -205,15 +205,16 @@ public class DatabasePersistenceProvider<T> : IPersistenceProvider<T> where T : 
     public async Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken = default)
     {
         // Save to database
+        await Task.CompletedTask;
     }
-    
+
     public async Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default)
     {
         // Load from database
-        return null;
+        return await Task.FromResult<INavigationState<T>?>(null);
     }
-    
-    // Implement other interface methods...
+
+    // Implement HasSavedState, ClearState, etc.
 }
 ```
 

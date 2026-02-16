@@ -2,12 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Models;
+namespace ktsu.Navigation.Models;
 
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ktsu.Navigation.Core.Contracts;
+using ktsu.Navigation.Contracts;
 
 /// <summary>
 /// A base implementation of a navigation item

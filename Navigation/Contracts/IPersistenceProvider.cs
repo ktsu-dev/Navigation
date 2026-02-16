@@ -2,7 +2,7 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.Navigation.Core.Contracts;
+namespace ktsu.Navigation.Contracts;
 
 using System;
 using System.Collections.Generic;

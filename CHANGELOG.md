@@ -1,3 +1,9 @@
+## v1.0.19 (patch)
+
+Changes since v1.0.18:
+
+- Bump Polyfill from 11.0.2 to 11.2.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
 ## v1.0.18 (patch)
 
 Changes since v1.0.17:
@@ -8,9 +14,7 @@ Changes since v1.0.17:
 
 ## v1.0.18-pre.1 (prerelease)
 
-Changes since v1.0.17:
-
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
+No significant changes detected since v1.0.18.
 
 ## v1.0.17 (patch)
 

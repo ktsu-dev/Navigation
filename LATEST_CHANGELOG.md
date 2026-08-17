@@ -1,6 +1,4 @@
-## v1.0.20 (patch)
+## v1.0.20
 
-Changes since v1.0.19:
-
-- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+No significant changes detected since v1.0.20.
 

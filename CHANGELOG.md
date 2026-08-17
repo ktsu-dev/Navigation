@@ -2,7 +2,7 @@
 
 Changes since v1.0.19:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 
 ## v1.0.19 (patch)
 

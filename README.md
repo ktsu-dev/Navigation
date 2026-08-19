@@ -8,7 +8,7 @@ A robust .NET library for implementing navigation stacks with undo/redo support 
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ktsu.Navigation?label=Downloads&logo=nuget)](https://nuget.org/packages/ktsu.Navigation)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ktsu-dev/Navigation?label=Commits&logo=github)](https://github.com/ktsu-dev/Navigation/commits/main)
 [![GitHub contributors](https://img.shields.io/github/contributors/ktsu-dev/Navigation?label=Contributors&logo=github)](https://github.com/ktsu-dev/Navigation/graphs/contributors)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/Navigation/dotnet.yml?label=Build&logo=github)](https://github.com/ktsu-dev/Navigation/actions)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/Navigation/dotnet.yml?branch=main&label=Build&logo=github)](https://github.com/ktsu-dev/Navigation/actions)
 
 ## Overview
 

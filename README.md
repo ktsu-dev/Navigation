@@ -2,6 +2,14 @@
 
 A robust .NET library for implementing navigation stacks with undo/redo support and persistence capabilities.
 
+[![License](https://img.shields.io/github/license/ktsu-dev/Navigation.svg?label=License&logo=nuget)](LICENSE.md)
+[![NuGet Version](https://img.shields.io/nuget/v/ktsu.Navigation?label=Stable&logo=nuget)](https://nuget.org/packages/ktsu.Navigation)
+[![NuGet Version](https://img.shields.io/nuget/vpre/ktsu.Navigation?label=Latest&logo=nuget)](https://nuget.org/packages/ktsu.Navigation)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ktsu.Navigation?label=Downloads&logo=nuget)](https://nuget.org/packages/ktsu.Navigation)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ktsu-dev/Navigation?label=Commits&logo=github)](https://github.com/ktsu-dev/Navigation/commits/main)
+[![GitHub contributors](https://img.shields.io/github/contributors/ktsu-dev/Navigation?label=Contributors&logo=github)](https://github.com/ktsu-dev/Navigation/graphs/contributors)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/Navigation/dotnet.yml?label=Build&logo=github)](https://github.com/ktsu-dev/Navigation/actions)
+
 ## Overview
 
 **ktsu.Navigation** provides a complete navigation stack implementation that supports:

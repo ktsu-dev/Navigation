@@ -1,4 +1,6 @@
-## v1.0.25
+## v1.0.26 (patch)
 
-No significant changes detected since v1.0.25.
+Changes since v1.0.25:
+
+- Bump the system group with 1 update ([@dependabot[bot]](https://github.com/dependabot[bot]))
 

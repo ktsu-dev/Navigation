@@ -4,7 +4,6 @@ namespace ktsu.Navigation.Models;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ktsu.Navigation.Contracts;
 
 /// <summary>
@@ -59,8 +58,9 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 		Ensure.NotNull(navigation);
 
 		IReadOnlyList<T> history = navigation.GetHistory();
-		T? current = navigation.Current;
-		int currentIndex = current != null ? history.ToList().FindIndex(item => item.Id == current.Id) : -1;
+		// The back stack holds every item before the current one, so its size is the current index.
+		// Searching the history for the current item instead would find an earlier visit to the same page.
+		int currentIndex = navigation.Current != null ? navigation.GetBackStack().Count : -1;
 
 		return new NavigationState<T>(history, currentIndex);
 	}

@@ -4,6 +4,7 @@ namespace ktsu.Navigation.Models;
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using ktsu.Navigation.Contracts;
 
 /// <summary>
@@ -32,6 +33,18 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 		Items = itemList.AsReadOnly();
 		CurrentIndex = currentIndex;
 		CreatedAt = DateTime.UtcNow;
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="NavigationState{T}"/> class when deserializing.
+	/// System.Text.Json requires each constructor parameter to have the same type as the property it binds to.
+	/// </summary>
+	/// <param name="items">The items in the navigation stack</param>
+	/// <param name="currentIndex">The index of the current item</param>
+	[JsonConstructor]
+	public NavigationState(IReadOnlyList<T> items, int currentIndex)
+		: this((IEnumerable<T>)items, currentIndex)
+	{
 	}
 
 	/// <inheritdoc />

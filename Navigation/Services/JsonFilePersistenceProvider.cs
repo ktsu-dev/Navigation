@@ -77,6 +77,11 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 			// If file read fails, return null
 			return null;
 		}
+		catch (ArgumentException)
+		{
+			// If the saved state is invalid (for example, a current index outside the items), return null
+			return null;
+		}
 	}
 
 	/// <inheritdoc />

@@ -155,11 +155,9 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return false;
 		}
 
-		Clear();
-		_items.AddRange(state.Items);
-		_currentIndex = state.CurrentIndex;
-
-		OnNavigationChanged(NavigationType.NavigateTo, default, Current);
+		// Replace the stack directly rather than through the public Clear(), so a load raises a single
+		// NavigateTo event from the page that was current before it, not a Clear followed by a NavigateTo.
+		RestoreState(state.Items, state.CurrentIndex);
 		return true;
 	}
 

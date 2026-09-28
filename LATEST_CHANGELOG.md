@@ -1,4 +1,7 @@
-## v1.1.1
+## v1.1.2 (patch)
 
-No significant changes detected since v1.1.1.
+Changes since v1.1.1:
+
+- Raise one NavigateTo event from the previous page when loading state [patch] ([@Claude](https://github.com/Claude))
+- Reject a saved state that contains null items [patch] ([@Claude](https://github.com/Claude))
 

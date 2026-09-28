@@ -241,7 +241,12 @@ public NavigationState(IEnumerable<T> items, int currentIndex)
 
 ### SimpleUndoRedoProvider
 
-Built-in implementation of undo/redo functionality.
+Built-in implementation of undo/redo functionality. It adapts `IUndoRedoProvider` onto
+`ktsu.UndoRedo`'s `UndoRedoService`, which keeps the history.
+
+A registered action is not run again when it is registered, since the caller has already done it. An
+action that throws from `Undo()` or `Redo()` stays where it was in the history, and the exception
+propagates.
 
 ```csharp
 public class SimpleUndoRedoProvider : IUndoRedoProvider
@@ -257,8 +262,8 @@ public SimpleUndoRedoProvider(int maxHistorySize = 100)
 
 | Method           | Return Type                      | Description                               |
 | ---------------- | -------------------------------- | ----------------------------------------- |
-| `GetUndoStack()` | `IReadOnlyList<IUndoableAction>` | Gets the current undo stack for debugging |
-| `GetRedoStack()` | `IReadOnlyList<IUndoableAction>` | Gets the current redo stack for debugging |
+| `GetUndoStack()` | `IReadOnlyList<IUndoableAction>` | Gets the current undo stack for debugging. The last entry is the next to undo |
+| `GetRedoStack()` | `IReadOnlyList<IUndoableAction>` | Gets the current redo stack for debugging. The last entry is the next to redo |
 
 ---
 

@@ -2,6 +2,7 @@
 
 namespace ktsu.Navigation.Test;
 
+using System.Text.Json;
 using ktsu.Navigation.Models;
 using ktsu.Navigation.Services;
 
@@ -56,5 +57,43 @@ public class JsonFilePersistenceProviderTests
 
 		// Act & Assert
 		Assert.IsNull(await provider.LoadStateAsync().ConfigureAwait(false));
+	}
+
+	[TestMethod]
+	public void NavigationItem_JsonRoundTrip_KeepsCreatedAtAndMetadata()
+	{
+		// Arrange
+		string json = """{"Id":"x","DisplayName":"X","CreatedAt":"2020-01-01T00:00:00Z","Metadata":{"k":"v"}}""";
+
+		// Act
+		NavigationItem item = JsonSerializer.Deserialize<NavigationItem>(json)!;
+
+		// Assert
+		Assert.AreEqual(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc), item.CreatedAt);
+		Assert.HasCount(1, item.Metadata);
+		Assert.AreEqual("v", ((JsonElement)item.Metadata["k"]).GetString());
+	}
+
+	[TestMethod]
+	public async Task SaveThenLoad_KeepsItemCreatedAtAndMetadata()
+	{
+		// Arrange
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		NavigationItem item = new("a", "A");
+		item.SetMetadata("scroll", 42);
+		navigation.NavigateTo(item);
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Act
+		Navigation<NavigationItem> restored = new(null, provider);
+		bool loaded = await restored.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(loaded);
+		NavigationItem current = restored.Current!;
+		Assert.AreEqual(item.CreatedAt, current.CreatedAt);
+		Assert.HasCount(1, current.Metadata);
+		Assert.AreEqual(42, ((JsonElement)current.Metadata["scroll"]).GetInt32());
 	}
 }

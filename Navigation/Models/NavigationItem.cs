@@ -5,6 +5,7 @@ namespace ktsu.Navigation.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.Json.Serialization;
 using ktsu.Navigation.Contracts;
 
@@ -62,12 +63,9 @@ public class NavigationItem : INavigationItem
 
 		if (metadata != null)
 		{
-			foreach (KeyValuePair<string, object> entry in metadata)
+			foreach (KeyValuePair<string, object> entry in metadata.Where(entry => !string.IsNullOrWhiteSpace(entry.Key) && entry.Value != null))
 			{
-				if (!string.IsNullOrWhiteSpace(entry.Key) && entry.Value != null)
-				{
-					_metadata[entry.Key] = entry.Value;
-				}
+				_metadata[entry.Key] = entry.Value;
 			}
 		}
 	}

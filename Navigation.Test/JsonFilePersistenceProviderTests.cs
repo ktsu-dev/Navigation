@@ -57,4 +57,22 @@ public class JsonFilePersistenceProviderTests
 		// Act & Assert
 		Assert.IsNull(await provider.LoadStateAsync().ConfigureAwait(false));
 	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_NullItem_ReturnsFalseAndLeavesStackUnchanged()
+	{
+		// Arrange
+		await File.WriteAllTextAsync(_filePath!, """{"items":[null],"currentIndex":0}""").ConfigureAwait(false);
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+
+		// Act
+		bool loaded = await navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsFalse(loaded);
+		Assert.AreEqual(1, navigation.Count);
+		Assert.AreEqual("a", navigation.Current?.Id);
+	}
 }

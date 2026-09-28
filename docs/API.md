@@ -195,7 +195,11 @@ public class NavigationItem : INavigationItem
 
 ```csharp
 public NavigationItem(string id, string displayName)
+public NavigationItem(string id, string displayName, DateTime createdAt, IReadOnlyDictionary<string, object>? metadata)
 ```
+
+The second constructor is the one System.Text.Json uses, so `CreatedAt` and `Metadata` survive a save and load.
+Metadata values read back from JSON are `JsonElement` instances rather than their original CLR types.
 
 #### Method Overrides
 

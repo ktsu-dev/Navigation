@@ -1,12 +1,6 @@
-## v1.2.0 (minor)
+## v1.2.1-pre.1 (prerelease)
 
-Changes since v1.1.0:
+Changes since v1.2.0:
 
-- Merge remote-tracking branch 'origin/main' into fix/navigation-item-json-round-trip ([@Claude](https://github.com/Claude))
-- Filter restored metadata with Where before copying it ([@Claude](https://github.com/Claude))
-- Keep a NavigationItem's CreatedAt and Metadata through a JSON round trip [minor] ([@Claude](https://github.com/Claude))
-- Raise one NavigateTo event from the previous page when loading state [patch] ([@Claude](https://github.com/Claude))
-- Reject a saved state that contains null items [patch] ([@Claude](https://github.com/Claude))
-- Merge remote-tracking branch 'origin/main' into fix/restore-position-repeated-page ([@Claude](https://github.com/Claude))
-- Restore the saved position when the current page appears earlier in history ([@Claude](https://github.com/Claude))
+- Bump Polyfill from 11.4.0 to 11.4.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 

@@ -1,3 +1,9 @@
+## v1.2.1-pre.1 (prerelease)
+
+Changes since v1.2.0:
+
+- Bump Polyfill from 11.4.0 to 11.4.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
 ## v1.2.0 (minor)
 
 Changes since v1.1.0:
@@ -38,15 +44,19 @@ Changes since v1.0.0:
 - docs: scope build badge to the default branch ([@matt-edmondson](https://github.com/matt-edmondson))
 - docs: correct README, DESCRIPTION and TAGS metadata ([@matt-edmondson](https://github.com/matt-edmondson))
 - Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - Sync .editorconfig ([@KtsuTools](https://github.com/KtsuTools))
 - Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - chore: update ktsu.Sdk to 2.21.1 [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - chore: remove unused SourceLink package versions ([@matt-edmondson](https://github.com/matt-edmondson))
 - chore: trim unused package version and source link refs ([@matt-edmondson](https://github.com/matt-edmondson))
 - Remove stale files ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider ([@matt-edmondson](https://github.com/matt-edmondson))
 - Remove legacy build scripts ([@matt-edmondson](https://github.com/matt-edmondson))
 - Refactor interfaces to enforce class constraints and update package references ([@matt-edmondson](https://github.com/matt-edmondson))
+- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
 - Update project configuration and dependencies ([@matt-edmondson](https://github.com/matt-edmondson))
 - Fix using directive placement in NavigationStackTests.cs for consistency with coding standards ([@matt-edmondson](https://github.com/matt-edmondson))
 - Enhance project documentation and metadata ([@matt-edmondson](https://github.com/matt-edmondson))
@@ -164,13 +174,13 @@ Changes since v1.0.18:
 
 Changes since v1.0.17:
 
-- Bump the system group with 1 update ([@dependabot[bot]](https://github.com/dependabot[bot]))
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 - Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.18-pre.1 (prerelease)
 
-No significant changes detected since v1.0.18.
+Changes since v1.0.17:
+
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.17 (patch)
 
@@ -183,6 +193,7 @@ Changes since v1.0.16:
 Changes since v1.0.15:
 
 - Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.15 (patch)
 
@@ -229,6 +240,7 @@ Changes since v1.0.9:
 
 Changes since v1.0.8:
 
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider ([@matt-edmondson](https://github.com/matt-edmondson))
 
 ## v1.0.8 (patch)
@@ -270,13 +282,19 @@ Changes since v1.0.7-pre.1:
 
 ## v1.0.7-pre.1 (prerelease)
 
-No significant changes detected since v1.0.7.
+Changes since v1.0.6:
+
+- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
 
 ## v1.0.6 (patch)
 
 Changes since v1.0.5:
 
 - Refactor interfaces to enforce class constraints and update package references ([@matt-edmondson](https://github.com/matt-edmondson))
+- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
 
 ## v1.0.6-pre.4 (prerelease)
 
@@ -299,7 +317,14 @@ Changes since v1.0.6-pre.1:
 
 ## v1.0.6-pre.1 (prerelease)
 
-No significant changes detected since v1.0.6.
+Changes since v1.0.5:
+
+- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .specstory\.gitignore ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .gitattributes ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .runsettings ([@ktsu[bot]](https://github.com/ktsu[bot]))
 
 ## v1.0.5 (patch)
 

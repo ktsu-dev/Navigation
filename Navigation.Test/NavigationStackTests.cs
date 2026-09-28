@@ -257,4 +257,28 @@ public class NavigationStackTests
 		Assert.IsFalse(restored.CanGoForward);
 		Assert.AreEqual("home,about", string.Join(",", restored.GetBackStack().Select(item => item.Id)));
 	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_RaisesOneNavigateToEventFromThePreviousPage()
+	{
+		// Arrange
+		Navigation<NavigationItem> saved = new(null, _persistenceProvider);
+		saved.NavigateTo(new NavigationItem("x", "X"));
+		await saved.SaveStateAsync().ConfigureAwait(false);
+
+		NavigationItem previous = new("a", "A");
+		_navigation!.NavigateTo(previous);
+		List<NavigationEventArgs<NavigationItem>> events = [];
+		_navigation.NavigationChanged += (sender, e) => events.Add(e);
+
+		// Act
+		bool loaded = await _navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(loaded);
+		Assert.HasCount(1, events);
+		Assert.AreEqual(NavigationType.NavigateTo, events[0].NavigationType);
+		Assert.AreEqual(previous, events[0].PreviousItem);
+		Assert.AreEqual("x", events[0].CurrentItem?.Id);
+	}
 }

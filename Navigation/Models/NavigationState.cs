@@ -18,11 +18,17 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 	/// </summary>
 	/// <param name="items">The items in the navigation stack</param>
 	/// <param name="currentIndex">The index of the current item</param>
+	/// <exception cref="ArgumentException">Thrown when any of the items is null</exception>
 	public NavigationState(IEnumerable<T> items, int currentIndex)
 	{
 		Ensure.NotNull(items);
 
 		List<T> itemList = [.. items];
+
+		if (itemList.Exists(item => item is null))
+		{
+			throw new ArgumentException("Navigation state items cannot be null.", nameof(items));
+		}
 
 		if (currentIndex < -1 || currentIndex >= itemList.Count)
 		{

@@ -96,4 +96,22 @@ public class JsonFilePersistenceProviderTests
 		Assert.HasCount(1, current.Metadata);
 		Assert.AreEqual(42, ((JsonElement)current.Metadata["scroll"]).GetInt32());
 	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_NullItem_ReturnsFalseAndLeavesStackUnchanged()
+	{
+		// Arrange
+		await File.WriteAllTextAsync(_filePath!, """{"items":[null],"currentIndex":0}""").ConfigureAwait(false);
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+
+		// Act
+		bool loaded = await navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsFalse(loaded);
+		Assert.AreEqual(1, navigation.Count);
+		Assert.AreEqual("a", navigation.Current?.Id);
+	}
 }

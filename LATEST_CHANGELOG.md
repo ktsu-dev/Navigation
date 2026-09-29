@@ -1,6 +1,6 @@
-## v1.3.0 (minor)
+## v1.4.0 (minor)
 
-Changes since v1.2.0:
+Changes since v1.3.0:
 
-- Back SimpleUndoRedoProvider with ktsu.UndoRedo [minor] ([@Claude](https://github.com/Claude))
+- Keep a NavigationState's CreatedAt through a JSON round trip [minor] ([@Claude](https://github.com/Claude))
 

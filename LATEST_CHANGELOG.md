@@ -1,6 +1,6 @@
-## v1.4.0 (minor)
+## v1.4.1 (patch)
 
-Changes since v1.3.0:
+Changes since v1.4.0:
 
-- Keep a NavigationState's CreatedAt through a JSON round trip [minor] ([@Claude](https://github.com/Claude))
+- Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
 

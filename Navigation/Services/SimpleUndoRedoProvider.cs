@@ -6,15 +6,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ktsu.Navigation.Contracts;
+using ktsu.UndoRedo;
+using ktsu.UndoRedo.Core.Services;
+using ktsu.UndoRedo.Models;
 
 /// <summary>
-/// A simple implementation of an undo/redo provider
+/// An undo/redo provider backed by <c>ktsu.UndoRedo</c>'s <see cref="UndoRedoService"/>.
 /// </summary>
+/// <remarks>
+/// This is an adapter: <see cref="IUndoRedoProvider"/> stays the contract navigation stacks are
+/// written against, and the history itself is kept by <see cref="UndoRedoService"/>.
+/// <para>
+/// An action that throws from <see cref="Undo"/> or <see cref="Redo"/> stays where it was, and the
+/// exception propagates. <see cref="UndoRedoService"/> moves past a command before running it, so on
+/// its own a failed undo would leave the action on the redo stack as though it had been undone. The
+/// adapter moves it back without running it again.
+/// </para>
+/// </remarks>
 public class SimpleUndoRedoProvider : IUndoRedoProvider
 {
-	private readonly List<IUndoableAction> _undoStack;
-	private readonly List<IUndoableAction> _redoStack;
-	private readonly int _maxHistorySize;
+	private readonly UndoRedoService _service;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SimpleUndoRedoProvider"/> class
@@ -27,16 +38,17 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 			throw new ArgumentException("Max history size must be greater than zero.", nameof(maxHistorySize));
 		}
 
-		_maxHistorySize = maxHistorySize;
-		_undoStack = [];
-		_redoStack = [];
+		// Navigation actions are never merged, and navigating to a change is this library's job rather
+		// than the history's, so both are switched off.
+		UndoRedoOptions options = new(MaxStackSize: maxHistorySize, AutoMergeCommands: false, EnableNavigation: false);
+		_service = new UndoRedoService(new StackManager(), new SaveBoundaryManager(), new CommandMerger(), options);
 	}
 
 	/// <inheritdoc />
-	public bool CanUndo => _undoStack.Count > 0;
+	public bool CanUndo => _service.CanUndo;
 
 	/// <inheritdoc />
-	public bool CanRedo => _redoStack.Count > 0;
+	public bool CanRedo => _service.CanRedo;
 
 	/// <inheritdoc />
 	public event EventHandler? StateChanged;
@@ -46,95 +58,152 @@ public class SimpleUndoRedoProvider : IUndoRedoProvider
 	{
 		Ensure.NotNull(action);
 
-		// Add to undo stack
-		_undoStack.Add(action);
-
-		// Clear redo stack when new action is registered
-		_redoStack.Clear();
-
-		// Trim undo stack if it exceeds max size
-		if (_undoStack.Count > _maxHistorySize)
-		{
-			_undoStack.RemoveAt(0);
-		}
-
+		_service.Execute(new RegisteredAction(action, description));
 		OnStateChanged();
 	}
 
 	/// <inheritdoc />
 	public bool Undo()
 	{
-		if (!CanUndo)
+		if (!_service.CanUndo)
 		{
 			return false;
 		}
 
-		IUndoableAction action = _undoStack.Last();
-		_undoStack.RemoveAt(_undoStack.Count - 1);
+		RegisteredAction current = (RegisteredAction)_service.Commands[_service.CurrentPosition];
 
 		try
 		{
-			action.Undo();
-			_redoStack.Add(action);
-			OnStateChanged();
-			return true;
+			_service.Undo();
 		}
 		catch
 		{
-			// If undo fails, put the action back on the undo stack
-			_undoStack.Add(action);
+			// The service has already moved past the action. Put it back without running it again.
+			current.SkipNextExecute();
+			_service.Redo();
 			throw;
 		}
+
+		OnStateChanged();
+		return true;
 	}
 
 	/// <inheritdoc />
 	public bool Redo()
 	{
-		if (!CanRedo)
+		if (!_service.CanRedo)
 		{
 			return false;
 		}
 
-		IUndoableAction action = _redoStack.Last();
-		_redoStack.RemoveAt(_redoStack.Count - 1);
+		RegisteredAction next = (RegisteredAction)_service.Commands[_service.CurrentPosition + 1];
 
 		try
 		{
-			action.Execute();
-			_undoStack.Add(action);
-			OnStateChanged();
-			return true;
+			_service.Redo();
 		}
 		catch
 		{
-			// If redo fails, put the action back on the redo stack
-			_redoStack.Add(action);
+			// The service has already moved past the action. Put it back without undoing it.
+			next.SkipNextUndo();
+			_service.Undo();
 			throw;
 		}
+
+		OnStateChanged();
+		return true;
 	}
 
 	/// <inheritdoc />
 	public void Clear()
 	{
-		_undoStack.Clear();
-		_redoStack.Clear();
+		_service.Clear();
 		OnStateChanged();
 	}
 
 	/// <summary>
 	/// Gets the current undo stack for debugging or inspection
 	/// </summary>
-	/// <returns>A read-only list of undoable actions</returns>
-	public IReadOnlyList<IUndoableAction> GetUndoStack() => _undoStack.AsReadOnly();
+	/// <returns>A read-only list of undoable actions, ending with the one the next undo would run</returns>
+	public IReadOnlyList<IUndoableAction> GetUndoStack() =>
+		_service.Commands
+			.Take(_service.CurrentPosition + 1)
+			.Select(Unwrap)
+			.ToList()
+			.AsReadOnly();
 
 	/// <summary>
 	/// Gets the current redo stack for debugging or inspection
 	/// </summary>
-	/// <returns>A read-only list of undoable actions</returns>
-	public IReadOnlyList<IUndoableAction> GetRedoStack() => _redoStack.AsReadOnly();
+	/// <returns>A read-only list of undoable actions, ending with the one the next redo would run</returns>
+	public IReadOnlyList<IUndoableAction> GetRedoStack() =>
+		_service.Commands
+			.Skip(_service.CurrentPosition + 1)
+			.Reverse()
+			.Select(Unwrap)
+			.ToList()
+			.AsReadOnly();
 
 	/// <summary>
 	/// Raises the state changed event
 	/// </summary>
 	protected virtual void OnStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
+
+	private static IUndoableAction Unwrap(ICommand command) => ((RegisteredAction)command).Action;
+
+	/// <summary>
+	/// Presents an <see cref="IUndoableAction"/> to the history as a command.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="UndoRedoService.Execute(ICommand)"/> runs a command as it records it, but an action
+	/// reaches <see cref="RegisterAction"/> after its caller has already done the work, so the first
+	/// <see cref="Execute"/> is skipped. The same switch lets a failed undo or redo move the history's
+	/// position back without running the action a second time.
+	/// </remarks>
+	/// <param name="action">The action being recorded.</param>
+	/// <param name="description">The description it was registered with.</param>
+	private sealed class RegisteredAction(IUndoableAction action, string description) : ICommand
+	{
+		private bool _skipNextExecute = true;
+		private bool _skipNextUndo;
+
+		public IUndoableAction Action { get; } = action;
+
+		public string Description { get; } = description;
+
+		public string? NavigationContext => null;
+
+		public ChangeMetadata Metadata { get; } = new(ChangeType.Custom, [], DateTimeOffset.UtcNow);
+
+		public void SkipNextExecute() => _skipNextExecute = true;
+
+		public void SkipNextUndo() => _skipNextUndo = true;
+
+		public void Execute()
+		{
+			if (_skipNextExecute)
+			{
+				_skipNextExecute = false;
+				return;
+			}
+
+			Action.Execute();
+		}
+
+		public void Undo()
+		{
+			if (_skipNextUndo)
+			{
+				_skipNextUndo = false;
+				return;
+			}
+
+			Action.Undo();
+		}
+
+		public bool CanMergeWith(ICommand other) => false;
+
+		public ICommand MergeWith(ICommand other) =>
+			throw new NotSupportedException("Navigation actions are never merged.");
+	}
 }

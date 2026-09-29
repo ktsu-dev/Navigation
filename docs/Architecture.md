@@ -45,7 +45,7 @@ Key models:
 
 -   **Purpose**: Business logic and concrete implementations
 -   **Contains**: Core algorithms, default implementations, utilities
--   **Dependencies**: Contracts and Models
+-   **Dependencies**: Contracts and Models, plus `ktsu.UndoRedo.Core`, which keeps the history behind `SimpleUndoRedoProvider`
 
 Key services:
 

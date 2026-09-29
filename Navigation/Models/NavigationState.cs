@@ -42,15 +42,31 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="NavigationState{T}"/> class when deserializing.
-	/// System.Text.Json requires each constructor parameter to have the same type as the property it binds to.
+	/// Initializes a new instance of the <see cref="NavigationState{T}"/> class
 	/// </summary>
 	/// <param name="items">The items in the navigation stack</param>
 	/// <param name="currentIndex">The index of the current item</param>
-	[JsonConstructor]
 	public NavigationState(IReadOnlyList<T> items, int currentIndex)
 		: this((IEnumerable<T>)items, currentIndex)
 	{
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="NavigationState{T}"/> class when deserializing, keeping the
+	/// creation time that was saved. System.Text.Json requires each constructor parameter to have the same name
+	/// and type as the property it binds to.
+	/// </summary>
+	/// <param name="items">The items in the navigation stack</param>
+	/// <param name="currentIndex">The index of the current item</param>
+	/// <param name="createdAt">The timestamp when this state was created; the default value means now</param>
+	[JsonConstructor]
+	public NavigationState(IReadOnlyList<T> items, int currentIndex, DateTime createdAt)
+		: this((IEnumerable<T>)items, currentIndex)
+	{
+		if (createdAt != default)
+		{
+			CreatedAt = createdAt;
+		}
 	}
 
 	/// <inheritdoc />

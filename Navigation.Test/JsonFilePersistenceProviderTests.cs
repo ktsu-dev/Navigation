@@ -3,6 +3,7 @@
 namespace ktsu.Navigation.Test;
 
 using System.Text.Json;
+using ktsu.Navigation.Contracts;
 using ktsu.Navigation.Models;
 using ktsu.Navigation.Services;
 
@@ -72,6 +73,39 @@ public class JsonFilePersistenceProviderTests
 		Assert.AreEqual(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc), item.CreatedAt);
 		Assert.HasCount(1, item.Metadata);
 		Assert.AreEqual("v", ((JsonElement)item.Metadata["k"]).GetString());
+	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_KeepsSavedStateCreatedAt()
+	{
+		// Arrange
+		await File.WriteAllTextAsync(_filePath!, """{"items":[{"id":"a","displayName":"A"}],"currentIndex":0,"createdAt":"2020-01-01T00:00:00Z"}""").ConfigureAwait(false);
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+
+		// Act
+		INavigationState<NavigationItem>? state = await provider.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsNotNull(state);
+		Assert.AreEqual(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc), state.CreatedAt);
+	}
+
+	[TestMethod]
+	public async Task SaveThenLoad_KeepsStateCreatedAt()
+	{
+		// Arrange
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		List<NavigationItem> items = [new NavigationItem("a", "A")];
+		NavigationState<NavigationItem> saved = new(items, 0);
+		await provider.SaveStateAsync(saved).ConfigureAwait(false);
+		await Task.Delay(50).ConfigureAwait(false);
+
+		// Act
+		INavigationState<NavigationItem>? loaded = await provider.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsNotNull(loaded);
+		Assert.AreEqual(saved.CreatedAt, loaded.CreatedAt);
 	}
 
 	[TestMethod]

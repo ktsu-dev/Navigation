@@ -1,6 +1,6 @@
-## v1.2.1-pre.1 (prerelease)
+## v1.3.0 (minor)
 
 Changes since v1.2.0:
 
-- Bump Polyfill from 11.4.0 to 11.4.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Back SimpleUndoRedoProvider with ktsu.UndoRedo [minor] ([@Claude](https://github.com/Claude))
 

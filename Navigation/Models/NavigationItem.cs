@@ -15,6 +15,7 @@ using ktsu.Navigation.Contracts;
 public class NavigationItem : INavigationItem
 {
 	private readonly Dictionary<string, object> _metadata;
+	private string _displayName;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="NavigationItem"/> class
@@ -34,7 +35,7 @@ public class NavigationItem : INavigationItem
 		}
 
 		Id = id;
-		DisplayName = displayName;
+		_displayName = displayName;
 		CreatedAt = DateTime.UtcNow;
 		_metadata = [];
 	}
@@ -74,7 +75,20 @@ public class NavigationItem : INavigationItem
 	public string Id { get; }
 
 	/// <inheritdoc />
-	public string DisplayName { get; set; }
+	/// <exception cref="ArgumentException">The value is null or whitespace.</exception>
+	public string DisplayName
+	{
+		get => _displayName;
+		set
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				throw new ArgumentException("Display name cannot be null or whitespace.", nameof(value));
+			}
+
+			_displayName = value;
+		}
+	}
 
 	/// <inheritdoc />
 	public DateTime CreatedAt { get; }

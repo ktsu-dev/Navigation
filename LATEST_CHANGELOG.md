@@ -1,6 +1,6 @@
-## v1.4.2-pre.1 (prerelease)
+## v1.4.2 (patch)
 
 Changes since v1.4.1:
 
-- Bump Polyfill from 11.4.1 to 11.4.3 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Return no state for an unreadable state file instead of throwing [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 

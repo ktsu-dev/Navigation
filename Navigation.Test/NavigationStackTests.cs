@@ -281,4 +281,127 @@ public class NavigationStackTests
 		Assert.AreEqual(previous, events[0].PreviousItem);
 		Assert.AreEqual("x", events[0].CurrentItem?.Id);
 	}
+
+	[TestMethod]
+	public void Undo_AfterGoBack_UndoesTheGoBackAndKeepsHistory()
+	{
+		// Arrange
+		NavigateToABC();
+		_navigation!.GoBack();
+		_navigation.GoBack();
+
+		// Act
+		_undoRedoProvider!.Undo();
+
+		// Assert
+		AssertStack("A,B,C", "B");
+
+		// Act - Redo
+		_undoRedoProvider.Redo();
+
+		// Assert
+		AssertStack("A,B,C", "A");
+	}
+
+	[TestMethod]
+	public void Undo_AfterGoForward_UndoesTheGoForward()
+	{
+		// Arrange
+		NavigateToABC();
+		_navigation!.GoBack();
+		_navigation.GoBack();
+		_navigation.GoForward();
+
+		// Act
+		_undoRedoProvider!.Undo();
+
+		// Assert
+		AssertStack("A,B,C", "A");
+	}
+
+	[TestMethod]
+	public void Undo_AfterClear_RestoresClearedHistory()
+	{
+		// Arrange
+		NavigateToABC();
+		_navigation!.Clear();
+		Assert.IsTrue(_undoRedoProvider!.CanUndo);
+
+		// Act
+		_undoRedoProvider.Undo();
+
+		// Assert
+		AssertStack("A,B,C", "C");
+
+		// Act - Redo
+		_undoRedoProvider.Redo();
+
+		// Assert
+		Assert.AreEqual(0, _navigation.Count);
+		Assert.IsNull(_navigation.Current);
+	}
+
+	[TestMethod]
+	public void Clear_OnEmptyStack_RecordsNothing()
+	{
+		// Act
+		_navigation!.Clear();
+
+		// Assert
+		Assert.IsFalse(_undoRedoProvider!.CanUndo);
+	}
+
+	[TestMethod]
+	public async Task Undo_AfterLoadStateAsync_RestoresPreLoadState()
+	{
+		// Arrange
+		Navigation<NavigationItem> saver = new(null, _persistenceProvider);
+		saver.NavigateTo(new NavigationItem("X", "X"));
+		saver.NavigateTo(new NavigationItem("Y", "Y"));
+		await saver.SaveStateAsync().ConfigureAwait(false);
+		_navigation!.NavigateTo(new NavigationItem("A", "A"));
+		_navigation.NavigateTo(new NavigationItem("B", "B"));
+		Assert.IsTrue(await _navigation.LoadStateAsync().ConfigureAwait(false));
+		AssertStack("X,Y", "Y");
+
+		// Act
+		_undoRedoProvider!.Undo();
+
+		// Assert
+		AssertStack("A,B", "B");
+
+		// Act - Redo
+		_undoRedoProvider.Redo();
+
+		// Assert
+		AssertStack("X,Y", "Y");
+	}
+
+	[TestMethod]
+	public void GoBack_WithoutUndoProvider_StillNavigates()
+	{
+		// Arrange
+		Navigation<NavigationItem> navigation = new();
+		navigation.NavigateTo(new NavigationItem("A", "A"));
+		navigation.NavigateTo(new NavigationItem("B", "B"));
+
+		// Act
+		NavigationItem? current = navigation.GoBack();
+
+		// Assert
+		Assert.AreEqual("A", current?.Id);
+	}
+
+	private void NavigateToABC()
+	{
+		_navigation!.NavigateTo(new NavigationItem("A", "A"));
+		_navigation.NavigateTo(new NavigationItem("B", "B"));
+		_navigation.NavigateTo(new NavigationItem("C", "C"));
+	}
+
+	private void AssertStack(string expectedIds, string expectedCurrentId)
+	{
+		Assert.AreEqual(expectedIds, string.Join(",", _navigation!.GetHistory().Select(item => item.Id)));
+		Assert.AreEqual(expectedCurrentId, _navigation.Current?.Id);
+	}
 }

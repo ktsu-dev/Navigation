@@ -45,10 +45,8 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		Ensure.NotNull(item);
 
 		T? previousItem = Current;
-
-		// Capture state before navigation for undo
 		int beforeIndex = _currentIndex;
-		List<T> beforeItems = [.. _items];
+		List<T>? beforeItems = SnapshotForUndo();
 
 		// Remove any forward history when navigating to a new item
 		if (_currentIndex < _items.Count - 1)
@@ -59,12 +57,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		_items.Add(item);
 		_currentIndex = _items.Count - 1;
 
-		// Create undoable action if undo/redo provider is available
-		if (undoRedoProvider != null)
-		{
-			NavigateToAction<T> action = new(this, beforeIndex, beforeItems, _currentIndex, [.. _items]);
-			undoRedoProvider.RegisterAction(action, $"Navigate to {item.DisplayName}");
-		}
+		RegisterUndo(beforeItems, beforeIndex, $"Navigate to {item.DisplayName}");
 
 		OnNavigationChanged(NavigationType.NavigateTo, previousItem, Current);
 	}
@@ -78,7 +71,11 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		}
 
 		T? previousItem = Current;
+		int beforeIndex = _currentIndex;
+		List<T>? beforeItems = SnapshotForUndo();
 		_currentIndex--;
+
+		RegisterUndo(beforeItems, beforeIndex, $"Go back to {Current?.DisplayName}");
 
 		OnNavigationChanged(NavigationType.GoBack, previousItem, Current);
 		return Current;
@@ -93,7 +90,11 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		}
 
 		T? previousItem = Current;
+		int beforeIndex = _currentIndex;
+		List<T>? beforeItems = SnapshotForUndo();
 		_currentIndex++;
+
+		RegisterUndo(beforeItems, beforeIndex, $"Go forward to {Current?.DisplayName}");
 
 		OnNavigationChanged(NavigationType.GoForward, previousItem, Current);
 		return Current;
@@ -103,8 +104,12 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	public void Clear()
 	{
 		T? previousItem = Current;
+		int beforeIndex = _currentIndex;
+		List<T>? beforeItems = _items.Count > 0 ? SnapshotForUndo() : null;
 		_items.Clear();
 		_currentIndex = -1;
+
+		RegisterUndo(beforeItems, beforeIndex, "Clear navigation history");
 
 		OnNavigationChanged(NavigationType.Clear, previousItem, default);
 	}
@@ -155,9 +160,14 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return false;
 		}
 
+		int beforeIndex = _currentIndex;
+		List<T>? beforeItems = SnapshotForUndo();
+
 		// Replace the stack directly rather than through the public Clear(), so a load raises a single
 		// NavigateTo event from the page that was current before it, not a Clear followed by a NavigateTo.
 		RestoreState(state.Items, state.CurrentIndex);
+
+		RegisterUndo(beforeItems, beforeIndex, "Load navigation state");
 		return true;
 	}
 
@@ -175,6 +185,31 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		_currentIndex = currentIndex;
 
 		OnNavigationChanged(NavigationType.NavigateTo, previousItem, Current);
+	}
+
+	/// <summary>
+	/// Copies the stack's items so the change about to be made can be undone, or returns null when
+	/// there is no undo/redo provider to record it with
+	/// </summary>
+	/// <returns>A copy of the items, or null</returns>
+	private List<T>? SnapshotForUndo() => undoRedoProvider != null ? [.. _items] : null;
+
+	/// <summary>
+	/// Records the change just made as one undoable action, so an undo restores exactly the stack the
+	/// change started from instead of an older snapshot
+	/// </summary>
+	/// <param name="beforeItems">The items before the change, from <see cref="SnapshotForUndo"/>; null records nothing</param>
+	/// <param name="beforeIndex">The current index before the change</param>
+	/// <param name="description">A description of the change</param>
+	private void RegisterUndo(List<T>? beforeItems, int beforeIndex, string description)
+	{
+		if (undoRedoProvider == null || beforeItems == null)
+		{
+			return;
+		}
+
+		NavigateToAction<T> action = new(this, beforeIndex, beforeItems, _currentIndex, [.. _items], description);
+		undoRedoProvider.RegisterAction(action, description);
 	}
 
 	/// <summary>

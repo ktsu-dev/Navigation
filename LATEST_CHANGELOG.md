@@ -1,6 +1,6 @@
-## v1.4.2 (patch)
+## v1.4.3 (patch)
 
-Changes since v1.4.1:
+Changes since v1.4.2:
 
-- Return no state for an unreadable state file instead of throwing [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Reject a null or whitespace DisplayName in the setter, as the constructor does [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 

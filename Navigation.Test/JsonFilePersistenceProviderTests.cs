@@ -2,6 +2,8 @@
 
 namespace ktsu.Navigation.Test;
 
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text.Json;
 using ktsu.Navigation.Contracts;
 using ktsu.Navigation.Models;
@@ -18,6 +20,11 @@ public class JsonFilePersistenceProviderTests
 	[TestCleanup]
 	public void Cleanup()
 	{
+		if (File.Exists(_filePath))
+		{
+			RestoreReadAccess(_filePath!);
+		}
+
 		if (File.Exists(_filePath))
 		{
 			File.Delete(_filePath);
@@ -147,5 +154,84 @@ public class JsonFilePersistenceProviderTests
 		Assert.IsFalse(loaded);
 		Assert.AreEqual(1, navigation.Count);
 		Assert.AreEqual("a", navigation.Current?.Id);
+	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_UnreadableFile_ReturnsNull()
+	{
+		// Arrange
+		await File.WriteAllTextAsync(_filePath!, """{"items":[{"id":"a","displayName":"A"}],"currentIndex":0}""").ConfigureAwait(false);
+		RevokeReadAccess(_filePath!);
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+
+		// Act
+		INavigationState<NavigationItem>? state = await provider.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsNull(state);
+	}
+
+	[TestMethod]
+	public async Task NavigationLoadStateAsync_UnreadableFile_ReportsNoStateLoaded()
+	{
+		// Arrange
+		await File.WriteAllTextAsync(_filePath!, """{"items":[{"id":"x","displayName":"X"}],"currentIndex":0}""").ConfigureAwait(false);
+		RevokeReadAccess(_filePath!);
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+
+		// Act
+		bool loaded = await navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsFalse(loaded);
+		Assert.AreEqual(1, navigation.Count);
+		Assert.AreEqual("a", navigation.Current?.Id);
+	}
+
+	/// <summary>
+	/// Makes a file unreadable by the current process: a deny-read ACL on Windows, mode 000 elsewhere.
+	/// Marks the test inconclusive when the process can read the file anyway, as root can.
+	/// </summary>
+	private static void RevokeReadAccess(string path)
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			FileInfo file = new(path);
+			FileSecurity security = file.GetAccessControl();
+			security.AddAccessRule(new FileSystemAccessRule(WindowsIdentity.GetCurrent().User!, FileSystemRights.ReadData, AccessControlType.Deny));
+			file.SetAccessControl(security);
+		}
+		else
+		{
+			File.SetUnixFileMode(path, UnixFileMode.None);
+		}
+
+		try
+		{
+			using FileStream stream = File.OpenRead(path);
+		}
+		catch (UnauthorizedAccessException)
+		{
+			return;
+		}
+
+		Assert.Inconclusive("The test process can read a file it has no read permission on, for example because it runs as root.");
+	}
+
+	private static void RestoreReadAccess(string path)
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			FileInfo file = new(path);
+			FileSecurity security = file.GetAccessControl();
+			security.RemoveAccessRule(new FileSystemAccessRule(WindowsIdentity.GetCurrent().User!, FileSystemRights.ReadData, AccessControlType.Deny));
+			file.SetAccessControl(security);
+		}
+		else
+		{
+			File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+		}
 	}
 }

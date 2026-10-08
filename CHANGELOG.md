@@ -1,6 +1,8 @@
-## v1.5.0
+## v1.5.1 (patch)
 
-No significant changes detected since v1.5.0.
+Changes since v1.5.0:
+
+- Lock the navigation stack so concurrent navigation keeps its history [patch] ([@Claude](https://github.com/Claude))
 
 ## v1.5.0 (minor)
 

@@ -1,3 +1,9 @@
+## v1.5.2-pre.1 (prerelease)
+
+Changes since v1.5.1:
+
+- Bump MSTest.Sdk from 4.4.1 to 4.5.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
 ## v1.5.1 (patch)
 
 Changes since v1.5.0:

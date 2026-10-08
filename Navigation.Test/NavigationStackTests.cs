@@ -392,6 +392,21 @@ public class NavigationStackTests
 		Assert.AreEqual("A", current?.Id);
 	}
 
+	[TestMethod]
+	public void NavigateTo_FromManyThreads_KeepsEveryItemAndAValidCurrent()
+	{
+		// Act
+		Parallel.For(0, 2000, i => _navigation!.NavigateTo(new NavigationItem("p" + i, "P" + i)));
+
+		// Assert
+		IReadOnlyList<NavigationItem> history = _navigation!.GetHistory();
+		Assert.AreEqual(2000, history.Count);
+		Assert.AreEqual(2000, history.Select(item => item.Id).Distinct().Count());
+		Assert.AreSame(history[^1], _navigation.Current);
+		Assert.AreEqual(1999, _navigation.GetBackStack().Count);
+		Assert.IsFalse(_navigation.CanGoForward);
+	}
+
 	private void NavigateToABC()
 	{
 		_navigation!.NavigateTo(new NavigationItem("A", "A"));

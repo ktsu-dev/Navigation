@@ -15,7 +15,9 @@ using ktsu.Navigation.Models;
 /// </summary>
 /// <typeparam name="T">The type of navigation items in the stack</typeparam>
 /// <remarks>
-/// Initializes a new instance of the <see cref="Navigation{T}"/> class
+/// Initializes a new instance of the <see cref="Navigation{T}"/> class.
+/// Every read and write of the history and current index happens under one private lock, so the stack can
+/// be used from several threads. <see cref="NavigationChanged"/> is raised after the lock is released.
 /// </remarks>
 /// <param name="undoRedoProvider">Optional undo/redo provider</param>
 /// <param name="persistenceProvider">Optional persistence provider</param>
@@ -23,18 +25,57 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 {
 	private readonly List<T> _items = [];
 	private int _currentIndex = -1;
+	private readonly Lock _sync = new();
 
 	/// <inheritdoc />
-	public T? Current => _currentIndex >= 0 && _currentIndex < _items.Count ? _items[_currentIndex] : default;
+	public T? Current
+	{
+		get
+		{
+			lock (_sync)
+			{
+				return CurrentUnlocked;
+			}
+		}
+	}
 
 	/// <inheritdoc />
-	public bool CanGoBack => _currentIndex > 0;
+	public bool CanGoBack
+	{
+		get
+		{
+			lock (_sync)
+			{
+				return _currentIndex > 0;
+			}
+		}
+	}
 
 	/// <inheritdoc />
-	public bool CanGoForward => _currentIndex < _items.Count - 1;
+	public bool CanGoForward
+	{
+		get
+		{
+			lock (_sync)
+			{
+				return _currentIndex < _items.Count - 1;
+			}
+		}
+	}
 
 	/// <inheritdoc />
-	public int Count => _items.Count;
+	public int Count
+	{
+		get
+		{
+			lock (_sync)
+			{
+				return _items.Count;
+			}
+		}
+	}
+
+	private T? CurrentUnlocked => _currentIndex >= 0 && _currentIndex < _items.Count ? _items[_currentIndex] : default;
 
 	/// <inheritdoc />
 	public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
@@ -44,87 +85,125 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	{
 		Ensure.NotNull(item);
 
-		T? previousItem = Current;
-		int beforeIndex = _currentIndex;
-		List<T>? beforeItems = SnapshotForUndo();
-
-		// Remove any forward history when navigating to a new item
-		if (_currentIndex < _items.Count - 1)
+		T? previousItem;
+		lock (_sync)
 		{
-			_items.RemoveRange(_currentIndex + 1, _items.Count - _currentIndex - 1);
+			previousItem = CurrentUnlocked;
+			int beforeIndex = _currentIndex;
+			List<T>? beforeItems = SnapshotForUndo();
+
+			// Remove any forward history when navigating to a new item
+			if (_currentIndex < _items.Count - 1)
+			{
+				_items.RemoveRange(_currentIndex + 1, _items.Count - _currentIndex - 1);
+			}
+
+			_items.Add(item);
+			_currentIndex = _items.Count - 1;
+
+			RegisterUndo(beforeItems, beforeIndex, $"Navigate to {item.DisplayName}");
 		}
 
-		_items.Add(item);
-		_currentIndex = _items.Count - 1;
-
-		RegisterUndo(beforeItems, beforeIndex, $"Navigate to {item.DisplayName}");
-
-		OnNavigationChanged(NavigationType.NavigateTo, previousItem, Current);
+		OnNavigationChanged(NavigationType.NavigateTo, previousItem, item);
 	}
 
 	/// <inheritdoc />
 	public T? GoBack()
 	{
-		if (!CanGoBack)
+		T? previousItem;
+		T? currentItem;
+		lock (_sync)
 		{
-			return default;
+			if (_currentIndex <= 0)
+			{
+				return default;
+			}
+
+			previousItem = CurrentUnlocked;
+			int beforeIndex = _currentIndex;
+			List<T>? beforeItems = SnapshotForUndo();
+			_currentIndex--;
+			currentItem = CurrentUnlocked;
+
+			RegisterUndo(beforeItems, beforeIndex, $"Go back to {currentItem?.DisplayName}");
 		}
 
-		T? previousItem = Current;
-		int beforeIndex = _currentIndex;
-		List<T>? beforeItems = SnapshotForUndo();
-		_currentIndex--;
-
-		RegisterUndo(beforeItems, beforeIndex, $"Go back to {Current?.DisplayName}");
-
-		OnNavigationChanged(NavigationType.GoBack, previousItem, Current);
-		return Current;
+		OnNavigationChanged(NavigationType.GoBack, previousItem, currentItem);
+		return currentItem;
 	}
 
 	/// <inheritdoc />
 	public T? GoForward()
 	{
-		if (!CanGoForward)
+		T? previousItem;
+		T? currentItem;
+		lock (_sync)
 		{
-			return default;
+			if (_currentIndex >= _items.Count - 1)
+			{
+				return default;
+			}
+
+			previousItem = CurrentUnlocked;
+			int beforeIndex = _currentIndex;
+			List<T>? beforeItems = SnapshotForUndo();
+			_currentIndex++;
+			currentItem = CurrentUnlocked;
+
+			RegisterUndo(beforeItems, beforeIndex, $"Go forward to {currentItem?.DisplayName}");
 		}
 
-		T? previousItem = Current;
-		int beforeIndex = _currentIndex;
-		List<T>? beforeItems = SnapshotForUndo();
-		_currentIndex++;
-
-		RegisterUndo(beforeItems, beforeIndex, $"Go forward to {Current?.DisplayName}");
-
-		OnNavigationChanged(NavigationType.GoForward, previousItem, Current);
-		return Current;
+		OnNavigationChanged(NavigationType.GoForward, previousItem, currentItem);
+		return currentItem;
 	}
 
 	/// <inheritdoc />
 	public void Clear()
 	{
-		T? previousItem = Current;
-		int beforeIndex = _currentIndex;
-		List<T>? beforeItems = _items.Count > 0 ? SnapshotForUndo() : null;
-		_items.Clear();
-		_currentIndex = -1;
+		T? previousItem;
+		lock (_sync)
+		{
+			previousItem = CurrentUnlocked;
+			int beforeIndex = _currentIndex;
+			List<T>? beforeItems = _items.Count > 0 ? SnapshotForUndo() : null;
+			_items.Clear();
+			_currentIndex = -1;
 
-		RegisterUndo(beforeItems, beforeIndex, "Clear navigation history");
+			RegisterUndo(beforeItems, beforeIndex, "Clear navigation history");
+		}
 
 		OnNavigationChanged(NavigationType.Clear, previousItem, default);
 	}
 
 	/// <inheritdoc />
-	public IReadOnlyList<T> GetHistory() => _items.AsReadOnly();
+	/// <remarks>Returns a copy, so a navigation on another thread cannot change it while it is enumerated.</remarks>
+	public IReadOnlyList<T> GetHistory()
+	{
+		lock (_sync)
+		{
+			return _items.ToList().AsReadOnly();
+		}
+	}
 
 	/// <inheritdoc />
-	public IReadOnlyList<T> GetBackStack() => _items.Take(_currentIndex).ToList().AsReadOnly();
+	public IReadOnlyList<T> GetBackStack()
+	{
+		lock (_sync)
+		{
+			return _items.Take(_currentIndex).ToList().AsReadOnly();
+		}
+	}
 
 	/// <inheritdoc />
-	public IReadOnlyList<T> GetForwardStack() =>
-		_currentIndex < _items.Count - 1
-			? _items.Skip(_currentIndex + 1).ToList().AsReadOnly()
-			: new List<T>().AsReadOnly();
+	public IReadOnlyList<T> GetForwardStack()
+	{
+		lock (_sync)
+		{
+			return _currentIndex < _items.Count - 1
+				? _items.Skip(_currentIndex + 1).ToList().AsReadOnly()
+				: new List<T>().AsReadOnly();
+		}
+	}
 
 	/// <summary>
 	/// Saves the current navigation state using the persistence provider
@@ -138,7 +217,14 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return;
 		}
 
-		NavigationState<T> state = NavigationState<T>.FromNavigationStack(this);
+		// Read the history and current index in one step, so a navigation on another thread cannot land between them
+		NavigationState<T> state;
+		lock (_sync)
+		{
+			List<T> items = [.. _items];
+			state = new NavigationState<T>(items, _currentIndex);
+		}
+
 		await persistenceProvider.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
 	}
 
@@ -160,14 +246,23 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return false;
 		}
 
-		int beforeIndex = _currentIndex;
-		List<T>? beforeItems = SnapshotForUndo();
+		T? previousItem;
+		T? currentItem;
+		lock (_sync)
+		{
+			previousItem = CurrentUnlocked;
+			int beforeIndex = _currentIndex;
+			List<T>? beforeItems = SnapshotForUndo();
 
-		// Replace the stack directly rather than through the public Clear(), so a load raises a single
-		// NavigateTo event from the page that was current before it, not a Clear followed by a NavigateTo.
-		RestoreState(state.Items, state.CurrentIndex);
+			// Replace the stack directly rather than through the public Clear(), so a load raises a single
+			// NavigateTo event from the page that was current before it, not a Clear followed by a NavigateTo.
+			ReplaceItems(state.Items, state.CurrentIndex);
+			currentItem = CurrentUnlocked;
 
-		RegisterUndo(beforeItems, beforeIndex, "Load navigation state");
+			RegisterUndo(beforeItems, beforeIndex, "Load navigation state");
+		}
+
+		OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
 		return true;
 	}
 
@@ -178,13 +273,28 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <param name="currentIndex">The current index to restore</param>
 	internal void RestoreState(IEnumerable<T> items, int currentIndex)
 	{
-		T? previousItem = Current;
+		T? previousItem;
+		T? currentItem;
+		lock (_sync)
+		{
+			previousItem = CurrentUnlocked;
+			ReplaceItems(items, currentIndex);
+			currentItem = CurrentUnlocked;
+		}
 
+		OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+	}
+
+	/// <summary>
+	/// Replaces the items and current index; the caller holds the lock
+	/// </summary>
+	/// <param name="items">The items to restore</param>
+	/// <param name="currentIndex">The current index to restore</param>
+	private void ReplaceItems(IEnumerable<T> items, int currentIndex)
+	{
 		_items.Clear();
 		_items.AddRange(items);
 		_currentIndex = currentIndex;
-
-		OnNavigationChanged(NavigationType.NavigateTo, previousItem, Current);
 	}
 
 	/// <summary>
@@ -201,6 +311,9 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <param name="beforeItems">The items before the change, from <see cref="SnapshotForUndo"/>; null records nothing</param>
 	/// <param name="beforeIndex">The current index before the change</param>
 	/// <param name="description">A description of the change</param>
+	/// <remarks>
+	/// Called under the lock, so actions reach the provider in the order the changes were made
+	/// </remarks>
 	private void RegisterUndo(List<T>? beforeItems, int beforeIndex, string description)
 	{
 		if (undoRedoProvider == null || beforeItems == null)

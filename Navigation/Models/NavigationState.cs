@@ -19,6 +19,9 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 	/// <param name="items">The items in the navigation stack</param>
 	/// <param name="currentIndex">The index of the current item</param>
 	/// <exception cref="ArgumentException">Thrown when any of the items is null</exception>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// Thrown when <paramref name="currentIndex"/> does not name one of the items, or is -1 although there are items
+	/// </exception>
 	public NavigationState(IEnumerable<T> items, int currentIndex)
 	{
 		Ensure.NotNull(items);
@@ -34,6 +37,14 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 		{
 			throw new ArgumentOutOfRangeException(nameof(currentIndex),
 				"Current index must be between -1 and the number of items minus 1.");
+		}
+
+		// A stack only has no current item when it is empty. Items with no current one would all be treated
+		// as forward history, which the next NavigateTo deletes.
+		if (currentIndex == -1 && itemList.Count > 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(currentIndex),
+				"Current index can only be -1 when there are no items.");
 		}
 
 		Items = itemList.AsReadOnly();

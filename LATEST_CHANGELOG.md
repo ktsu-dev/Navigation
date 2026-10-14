@@ -1,6 +1,6 @@
-## v1.5.2-pre.2 (prerelease)
+## v1.5.2 (patch)
 
-Changes since v1.5.2-pre.1:
+Changes since v1.5.1:
 
-- Bump Polyfill from 11.4.3 to 11.4.5 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Reject a loaded state with no current item but items, or any invalid state from a custom provider [patch] ([@Claude](https://github.com/Claude))
 

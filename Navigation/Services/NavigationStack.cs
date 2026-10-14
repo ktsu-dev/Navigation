@@ -232,7 +232,15 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// Loads navigation state using the persistence provider
 	/// </summary>
 	/// <param name="cancellationToken">A cancellation token</param>
-	/// <returns>A task representing the asynchronous load operation</returns>
+	/// <returns>
+	/// A task whose result is true if a state was loaded, or false if there was none or it was invalid, in which
+	/// case the stack is left unchanged
+	/// </returns>
+	/// <remarks>
+	/// The state is checked here rather than trusted, because a custom <see cref="IPersistenceProvider{T}"/> can
+	/// return any <see cref="INavigationState{T}"/>, not only one built by <see cref="NavigationState{T}"/>'s
+	/// validating constructor.
+	/// </remarks>
 	public async Task<bool> LoadStateAsync(CancellationToken cancellationToken = default)
 	{
 		if (persistenceProvider == null)
@@ -241,7 +249,15 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		}
 
 		INavigationState<T>? state = await persistenceProvider.LoadStateAsync(cancellationToken).ConfigureAwait(false);
-		if (state == null)
+		if (state?.Items == null)
+		{
+			return false;
+		}
+
+		// Copied once, so the items checked are the items restored
+		List<T> items = [.. state.Items];
+		int currentIndex = state.CurrentIndex;
+		if (!IsValidState(items, currentIndex))
 		{
 			return false;
 		}
@@ -256,7 +272,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 
 			// Replace the stack directly rather than through the public Clear(), so a load raises a single
 			// NavigateTo event from the page that was current before it, not a Clear followed by a NavigateTo.
-			ReplaceItems(state.Items, state.CurrentIndex);
+			ReplaceItems(items, currentIndex);
 			currentItem = CurrentUnlocked;
 
 			RegisterUndo(beforeItems, beforeIndex, "Load navigation state");
@@ -265,6 +281,20 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
 		return true;
 	}
+
+	/// <summary>
+	/// Reports whether a loaded state describes a stack this class could have produced
+	/// </summary>
+	/// <param name="items">The loaded items</param>
+	/// <param name="currentIndex">The loaded current index</param>
+	/// <returns>
+	/// True if no item is null and the current index names one of the items, or is -1 with no items
+	/// </returns>
+	private static bool IsValidState(List<T> items, int currentIndex) =>
+		!items.Exists(item => item is null)
+		&& currentIndex >= -1
+		&& currentIndex < items.Count
+		&& (currentIndex >= 0 || items.Count == 0);
 
 	/// <summary>
 	/// Restores the navigation stack to a specific state (used by undo/redo operations)

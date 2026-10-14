@@ -2,193 +2,193 @@
 
 Changes since v1.5.1:
 
-- Reject a loaded state with no current item but items, or any invalid state from a custom provider [patch] ([@Claude](https://github.com/Claude))
+- Reject a loaded state with no current item but items, or any invalid state from a custom provider [patch] (Claude)
 
 ## v1.5.2-pre.1 (prerelease)
 
 Changes since v1.5.1:
 
-- Bump MSTest.Sdk from 4.4.1 to 4.5.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump MSTest.Sdk from 4.4.1 to 4.5.1 (dependabot[bot])
 
 ## v1.5.1 (patch)
 
 Changes since v1.5.0:
 
-- Lock the navigation stack so concurrent navigation keeps its history [patch] ([@Claude](https://github.com/Claude))
+- Lock the navigation stack so concurrent navigation keeps its history [patch] (Claude)
 
 ## v1.5.0 (minor)
 
 Changes since v1.4.0:
 
-- Record GoBack, GoForward, Clear and LoadStateAsync as undoable actions [minor] ([@matt-edmondson](https://github.com/matt-edmondson))
-- Reject a null or whitespace DisplayName in the setter, as the constructor does [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- Return no state for an unreadable state file instead of throwing [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
+- Record GoBack, GoForward, Clear and LoadStateAsync as undoable actions [minor] (matt-edmondson)
+- Reject a null or whitespace DisplayName in the setter, as the constructor does [patch] (matt-edmondson)
+- Return no state for an unreadable state file instead of throwing [patch] (matt-edmondson)
+- Move CI onto the shared ci-shared.yml pipeline (Claude)
 
 ## v1.4.3 (patch)
 
 Changes since v1.4.2:
 
-- Reject a null or whitespace DisplayName in the setter, as the constructor does [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Reject a null or whitespace DisplayName in the setter, as the constructor does [patch] (matt-edmondson)
 
 ## v1.4.2 (patch)
 
 Changes since v1.4.1:
 
-- Return no state for an unreadable state file instead of throwing [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Return no state for an unreadable state file instead of throwing [patch] (matt-edmondson)
 
 ## v1.4.2-pre.1 (prerelease)
 
 Changes since v1.4.1:
 
-- Bump Polyfill from 11.4.1 to 11.4.3 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 11.4.1 to 11.4.3 (dependabot[bot])
 
 ## v1.4.1 (patch)
 
 Changes since v1.4.0:
 
-- Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
+- Move CI onto the shared ci-shared.yml pipeline (Claude)
 
 ## v1.4.0 (minor)
 
 Changes since v1.3.0:
 
-- Keep a NavigationState's CreatedAt through a JSON round trip [minor] ([@Claude](https://github.com/Claude))
+- Keep a NavigationState's CreatedAt through a JSON round trip [minor] (Claude)
 
 ## v1.3.0 (minor)
 
 Changes since v1.2.0:
 
-- Back SimpleUndoRedoProvider with ktsu.UndoRedo [minor] ([@Claude](https://github.com/Claude))
+- Back SimpleUndoRedoProvider with ktsu.UndoRedo [minor] (Claude)
 
 ## v1.2.1-pre.1 (prerelease)
 
 Changes since v1.2.0:
 
-- Bump Polyfill from 11.4.0 to 11.4.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 11.4.0 to 11.4.1 (dependabot[bot])
 
 ## v1.2.0 (minor)
 
 Changes since v1.1.0:
 
-- Merge remote-tracking branch 'origin/main' into fix/navigation-item-json-round-trip ([@Claude](https://github.com/Claude))
-- Filter restored metadata with Where before copying it ([@Claude](https://github.com/Claude))
-- Keep a NavigationItem's CreatedAt and Metadata through a JSON round trip [minor] ([@Claude](https://github.com/Claude))
-- Raise one NavigateTo event from the previous page when loading state [patch] ([@Claude](https://github.com/Claude))
-- Reject a saved state that contains null items [patch] ([@Claude](https://github.com/Claude))
-- Merge remote-tracking branch 'origin/main' into fix/restore-position-repeated-page ([@Claude](https://github.com/Claude))
-- Restore the saved position when the current page appears earlier in history ([@Claude](https://github.com/Claude))
+- Merge remote-tracking branch 'origin/main' into fix/navigation-item-json-round-trip (Claude)
+- Filter restored metadata with Where before copying it (Claude)
+- Keep a NavigationItem's CreatedAt and Metadata through a JSON round trip [minor] (Claude)
+- Raise one NavigateTo event from the previous page when loading state [patch] (Claude)
+- Reject a saved state that contains null items [patch] (Claude)
+- Merge remote-tracking branch 'origin/main' into fix/restore-position-repeated-page (Claude)
+- Restore the saved position when the current page appears earlier in history (Claude)
 
 ## v1.1.2 (patch)
 
 Changes since v1.1.1:
 
-- Raise one NavigateTo event from the previous page when loading state [patch] ([@Claude](https://github.com/Claude))
-- Reject a saved state that contains null items [patch] ([@Claude](https://github.com/Claude))
+- Raise one NavigateTo event from the previous page when loading state [patch] (Claude)
+- Reject a saved state that contains null items [patch] (Claude)
 
 ## v1.1.1 (patch)
 
 Changes since v1.1.0:
 
-- Merge remote-tracking branch 'origin/main' into fix/restore-position-repeated-page ([@Claude](https://github.com/Claude))
-- Restore the saved position when the current page appears earlier in history ([@Claude](https://github.com/Claude))
+- Merge remote-tracking branch 'origin/main' into fix/restore-position-repeated-page (Claude)
+- Restore the saved position when the current page appears earlier in history (Claude)
 
 ## v1.1.0 (minor)
 
 Changes since v1.0.0:
 
-- Load navigation state saved by JsonFilePersistenceProvider ([@Claude](https://github.com/Claude))
-- Add dotnet to TAGS.md ([@matt-edmondson](https://github.com/matt-edmondson))
-- Gate Dependabot auto-merge on CI actually being green ([@Claude](https://github.com/Claude))
-- ci: adopt the consolidated .NET workflow [patch] ([@Claude](https://github.com/Claude))
-- ci: make the SonarQube quality gate opt in [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- ci: adopt the unified dotnet workflow [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- chore: store icon.png in LFS as .gitattributes declares ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: scope build badge to the default branch ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: correct README, DESCRIPTION and TAGS metadata ([@matt-edmondson](https://github.com/matt-edmondson))
-- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
-- Sync .editorconfig ([@KtsuTools](https://github.com/KtsuTools))
-- Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
-- chore: update ktsu.Sdk to 2.21.1 [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- chore: remove unused SourceLink package versions ([@matt-edmondson](https://github.com/matt-edmondson))
-- chore: trim unused package version and source link refs ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove stale files ([@matt-edmondson](https://github.com/matt-edmondson))
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
-- feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove legacy build scripts ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor interfaces to enforce class constraints and update package references ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
-- Update project configuration and dependencies ([@matt-edmondson](https://github.com/matt-edmondson))
-- Fix using directive placement in NavigationStackTests.cs for consistency with coding standards ([@matt-edmondson](https://github.com/matt-edmondson))
-- Enhance project documentation and metadata ([@matt-edmondson](https://github.com/matt-edmondson))
-- Update project configuration and dependencies ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor navigation-related classes for clarity and performance ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. ([@matt-edmondson](https://github.com/matt-edmondson))
+- Load navigation state saved by JsonFilePersistenceProvider (Claude)
+- Add dotnet to TAGS.md (matt-edmondson)
+- Gate Dependabot auto-merge on CI actually being green (Claude)
+- ci: adopt the consolidated .NET workflow [patch] (Claude)
+- ci: make the SonarQube quality gate opt in [patch] (matt-edmondson)
+- ci: adopt the unified dotnet workflow [patch] (matt-edmondson)
+- chore: store icon.png in LFS as .gitattributes declares (matt-edmondson)
+- docs: scope build badge to the default branch (matt-edmondson)
+- docs: correct README, DESCRIPTION and TAGS metadata (matt-edmondson)
+- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] (matt-edmondson)
+- Sync .github\workflows\dotnet.yml (KtsuTools)
+- Sync .editorconfig (KtsuTools)
+- Sync global.json (KtsuTools)
+- Sync .github\workflows\dotnet.yml (KtsuTools)
+- chore: update ktsu.Sdk to 2.21.1 [patch] (matt-edmondson)
+- chore: remove unused SourceLink package versions (matt-edmondson)
+- chore: trim unused package version and source link refs (matt-edmondson)
+- Remove stale files (matt-edmondson)
+- Sync .github\workflows\dotnet.yml (KtsuTools)
+- feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider (matt-edmondson)
+- Remove legacy build scripts (matt-edmondson)
+- Refactor interfaces to enforce class constraints and update package references (matt-edmondson)
+- Remove .github\workflows\project.yml (matt-edmondson)
+- Update project configuration and dependencies (matt-edmondson)
+- Fix using directive placement in NavigationStackTests.cs for consistency with coding standards (matt-edmondson)
+- Enhance project documentation and metadata (matt-edmondson)
+- Update project configuration and dependencies (matt-edmondson)
+- Refactor navigation-related classes for clarity and performance (matt-edmondson)
+- Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. (matt-edmondson)
+- Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. (matt-edmondson)
+- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
 
 ## v1.0.35 (patch)
 
 Changes since v1.0.34:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.34 (patch)
 
 Changes since v1.0.33:
 
-- Bump Polyfill from 11.3.0 to 11.4.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 11.3.0 to 11.4.0 (dependabot[bot])
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.33 (patch)
 
 Changes since v1.0.32:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.32 (patch)
 
 Changes since v1.0.31:
 
-- Bump MSTest.Sdk from 4.4.0 to 4.4.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump MSTest.Sdk from 4.4.0 to 4.4.1 (dependabot[bot])
 
 ## v1.0.31 (patch)
 
 Changes since v1.0.30:
 
-- Add dotnet to TAGS.md ([@matt-edmondson](https://github.com/matt-edmondson))
+- Add dotnet to TAGS.md (matt-edmondson)
 
 ## v1.0.30 (patch)
 
 Changes since v1.0.29:
 
-- Gate Dependabot auto-merge on CI actually being green ([@Claude](https://github.com/Claude))
+- Gate Dependabot auto-merge on CI actually being green (Claude)
 
 ## v1.0.29 (patch)
 
 Changes since v1.0.28:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.28 (patch)
 
 Changes since v1.0.27:
 
-- ci: adopt the consolidated .NET workflow [patch] ([@Claude](https://github.com/Claude))
+- ci: adopt the consolidated .NET workflow [patch] (Claude)
 
 ## v1.0.27 (patch)
 
 Changes since v1.0.26:
 
-- Bump Polyfill from 11.2.0 to 11.3.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 11.2.0 to 11.3.0 (dependabot[bot])
 
 ## v1.0.26 (patch)
 
 Changes since v1.0.25:
 
-- Bump the system group with 1 update ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the system group with 1 update (dependabot[bot])
 
 ## v1.0.25 (patch)
 
@@ -198,234 +198,234 @@ No significant changes detected since v1.0.24.
 
 Changes since v1.0.23:
 
-- ci: make the SonarQube quality gate opt in [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- ci: adopt the unified dotnet workflow [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- ci: make the SonarQube quality gate opt in [patch] (matt-edmondson)
+- ci: adopt the unified dotnet workflow [patch] (matt-edmondson)
 
 ## v1.0.23 (patch)
 
 Changes since v1.0.22:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.22 (patch)
 
 Changes since v1.0.21:
 
-- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 9 updates (dependabot[bot])
 
 ## v1.0.21 (patch)
 
 Changes since v1.0.20:
 
-- chore: store icon.png in LFS as .gitattributes declares ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: scope build badge to the default branch ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: correct README, DESCRIPTION and TAGS metadata ([@matt-edmondson](https://github.com/matt-edmondson))
+- chore: store icon.png in LFS as .gitattributes declares (matt-edmondson)
+- docs: scope build badge to the default branch (matt-edmondson)
+- docs: correct README, DESCRIPTION and TAGS metadata (matt-edmondson)
 
 ## v1.0.20 (patch)
 
 Changes since v1.0.19:
 
-- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Fix KTSU0001: add System.Memory and System.Threading.Tasks.Extensions references for netstandard targets [patch] (matt-edmondson)
 
 ## v1.0.19 (patch)
 
 Changes since v1.0.18:
 
-- Bump Polyfill from 11.0.2 to 11.2.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 11.0.2 to 11.2.0 (dependabot[bot])
 
 ## v1.0.18 (patch)
 
 Changes since v1.0.17:
 
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml (KtsuTools)
 
 ## v1.0.18-pre.1 (prerelease)
 
 Changes since v1.0.17:
 
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml (KtsuTools)
 
 ## v1.0.17 (patch)
 
 Changes since v1.0.16:
 
-- Sync .editorconfig ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .editorconfig (KtsuTools)
 
 ## v1.0.16 (patch)
 
 Changes since v1.0.15:
 
-- Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
+- Sync global.json (KtsuTools)
+- Sync .github\workflows\dotnet.yml (KtsuTools)
 
 ## v1.0.15 (patch)
 
 Changes since v1.0.14:
 
-- chore: update ktsu.Sdk to 2.21.1 [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- chore: update ktsu.Sdk to 2.21.1 [patch] (matt-edmondson)
 
 ## v1.0.14 (patch)
 
 Changes since v1.0.13:
 
-- Bump the ktsu group with 8 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 8 updates (dependabot[bot])
 
 ## v1.0.13 (patch)
 
 Changes since v1.0.12:
 
-- Bump Polyfill from 10.11.1 to 10.11.2 ([@dependabot[bot]](https://github.com/dependabot[bot]))
-- Bump the ktsu group with 8 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 10.11.1 to 10.11.2 (dependabot[bot])
+- Bump the ktsu group with 8 updates (dependabot[bot])
 
 ## v1.0.12 (patch)
 
 Changes since v1.0.11:
 
-- Bump Polyfill from 10.11.0 to 10.11.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump Polyfill from 10.11.0 to 10.11.1 (dependabot[bot])
 
 ## v1.0.11 (patch)
 
 Changes since v1.0.10:
 
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Merge remote-tracking branch 'refs/remotes/origin/main' (ktsu[bot])
+- Sync .github\workflows\dotnet.yml (ktsu[bot])
+- Sync global.json (ktsu[bot])
 
 ## v1.0.10 (patch)
 
 Changes since v1.0.9:
 
-- chore: remove unused SourceLink package versions ([@matt-edmondson](https://github.com/matt-edmondson))
-- chore: trim unused package version and source link refs ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove stale files ([@matt-edmondson](https://github.com/matt-edmondson))
+- chore: remove unused SourceLink package versions (matt-edmondson)
+- chore: trim unused package version and source link refs (matt-edmondson)
+- Remove stale files (matt-edmondson)
 
 ## v1.0.9 (patch)
 
 Changes since v1.0.8:
 
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
-- feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml (KtsuTools)
+- feat: Introduce NavigationStackFactory and SimpleUndoRedoProvider (matt-edmondson)
 
 ## v1.0.8 (patch)
 
 Changes since v1.0.7:
 
-- Remove legacy build scripts ([@matt-edmondson](https://github.com/matt-edmondson))
+- Remove legacy build scripts (matt-edmondson)
 
 ## v1.0.7 (patch)
 
 Changes since v1.0.6:
 
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml (ktsu[bot])
+- Sync global.json (ktsu[bot])
+- Merge remote-tracking branch 'refs/remotes/origin/main' (ktsu[bot])
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync global.json (ktsu[bot])
+- Merge remote-tracking branch 'refs/remotes/origin/main' (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync global.json (ktsu[bot])
 
 ## v1.0.7-pre.3 (prerelease)
 
 Changes since v1.0.7-pre.2:
 
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Merge remote-tracking branch 'refs/remotes/origin/main' (ktsu[bot])
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
 
 ## v1.0.7-pre.2 (prerelease)
 
 Changes since v1.0.7-pre.1:
 
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync global.json (ktsu[bot])
 
 ## v1.0.7-pre.1 (prerelease)
 
 Changes since v1.0.6:
 
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Merge remote-tracking branch 'refs/remotes/origin/main' (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync global.json (ktsu[bot])
 
 ## v1.0.6 (patch)
 
 Changes since v1.0.5:
 
-- Refactor interfaces to enforce class constraints and update package references ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor interfaces to enforce class constraints and update package references (matt-edmondson)
+- Remove .github\workflows\project.yml (matt-edmondson)
 
 ## v1.0.6-pre.4 (prerelease)
 
 Changes since v1.0.6-pre.3:
 
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
 
 ## v1.0.6-pre.3 (prerelease)
 
 Changes since v1.0.6-pre.2:
 
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml (ktsu[bot])
 
 ## v1.0.6-pre.2 (prerelease)
 
 Changes since v1.0.6-pre.1:
 
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync .github\workflows\dotnet.yml (ktsu[bot])
 
 ## v1.0.6-pre.1 (prerelease)
 
 Changes since v1.0.5:
 
-- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .specstory\.gitignore ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .gitattributes ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .runsettings ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync scripts\PSBuild.psm1 (ktsu[bot])
+- Sync scripts\update-winget-manifests.ps1 (ktsu[bot])
+- Sync .github\workflows\dotnet.yml (ktsu[bot])
+- Sync .specstory\.gitignore (ktsu[bot])
+- Sync .gitattributes (ktsu[bot])
+- Sync .runsettings (ktsu[bot])
 
 ## v1.0.5 (patch)
 
 Changes since v1.0.4:
 
-- Update project configuration and dependencies ([@matt-edmondson](https://github.com/matt-edmondson))
+- Update project configuration and dependencies (matt-edmondson)
 
 ## v1.0.4 (patch)
 
 Changes since v1.0.3:
 
-- Fix using directive placement in NavigationStackTests.cs for consistency with coding standards ([@matt-edmondson](https://github.com/matt-edmondson))
-- Enhance project documentation and metadata ([@matt-edmondson](https://github.com/matt-edmondson))
+- Fix using directive placement in NavigationStackTests.cs for consistency with coding standards (matt-edmondson)
+- Enhance project documentation and metadata (matt-edmondson)
 
 ## v1.0.3 (patch)
 
 Changes since v1.0.2:
 
-- Update project configuration and dependencies ([@matt-edmondson](https://github.com/matt-edmondson))
+- Update project configuration and dependencies (matt-edmondson)
 
 ## v1.0.2 (patch)
 
 Changes since v1.0.1:
 
-- Refactor navigation-related classes for clarity and performance ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor navigation-related classes for clarity and performance (matt-edmondson)
 
 ## v1.0.1 (patch)
 
 Changes since v1.0.0:
 
-- Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. (matt-edmondson)
+- Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. (matt-edmondson)
+- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
 
 ## v1.0.0 (major)
 
-- Enhance coding standards in derived cursor rules and add testing discussion documentation. Updated derived cursor rules to enforce namespace usage for using directives, require explicit accessibility modifiers, and adhere to .NET naming conventions. Included common build error guidelines to improve code quality and maintainability. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Add Directory.Packages.props and global.json for centralized package management and SDK configuration. Update Navigation.Core project to handle nullability with default(T?) in NavigationStack. Modify .specstory to include derived cursor rules backup and add testing procedures discussion documentation. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Add initial implementation of Navigation Stack Library with core features including navigation management, undo/redo support, and persistence. Introduced contracts, models, and services architecture, along with comprehensive documentation and examples. ([@matt-edmondson](https://github.com/matt-edmondson))
-- Initial commit for Navigation ([@matt-edmondson](https://github.com/matt-edmondson))
+- Enhance coding standards in derived cursor rules and add testing discussion documentation. Updated derived cursor rules to enforce namespace usage for using directives, require explicit accessibility modifiers, and adhere to .NET naming conventions. Included common build error guidelines to improve code quality and maintainability. (matt-edmondson)
+- Add Directory.Packages.props and global.json for centralized package management and SDK configuration. Update Navigation.Core project to handle nullability with default(T?) in NavigationStack. Modify .specstory to include derived cursor rules backup and add testing procedures discussion documentation. (matt-edmondson)
+- Add initial implementation of Navigation Stack Library with core features including navigation management, undo/redo support, and persistence. Introduced contracts, models, and services architecture, along with comprehensive documentation and examples. (matt-edmondson)
+- Initial commit for Navigation (matt-edmondson)
 

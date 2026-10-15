@@ -127,7 +127,7 @@ Changes since v1.0.0:
 - Refactor navigation-related classes for clarity and performance (matt-edmondson)
 - Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. (matt-edmondson)
 - Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. (matt-edmondson)
-- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
+- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler\<T\> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
 
 ## v1.0.35 (patch)
 
@@ -420,7 +420,7 @@ Changes since v1.0.0:
 
 - Refactor NavigationStackTests to use INavigation interface instead of INavigationStack. Updated test methods to reflect changes in navigation service implementation, ensuring consistency and improved readability. (matt-edmondson)
 - Refactor navigation services and contracts to enhance code quality. Updated accessibility modifiers to public for several members, moved using directives inside namespace declarations, and renamed NavigationStack to Navigation for consistency. Improved structure in InMemoryPersistenceProvider, JsonFilePersistenceProvider, and other service files. (matt-edmondson)
-- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler<T> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
+- Refactor navigation interfaces and models to improve code quality and adhere to coding standards. Updated INavigationStack to INavigation, modified event handlers to use EventHandler\<T\> pattern, and ensured public accessibility modifiers are applied. Moved using directives inside namespace declarations to comply with IDE0065 rules across multiple files. (matt-edmondson)
 
 ## v1.0.0 (major)
 

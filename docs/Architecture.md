@@ -53,7 +53,7 @@ Key services:
 -   `SimpleUndoRedoProvider` - Built-in undo/redo functionality
 -   `InMemoryPersistenceProvider<T>` - Memory-based persistence
 -   `JsonFilePersistenceProvider<T>` - File-based persistence
--   `NavigationFactory` - Factory for creating configured instances
+-   `NavigationStackFactory` - Factory for creating configured instances
 
 ## SOLID Principles Implementation
 
@@ -105,7 +105,7 @@ High-level modules depend on abstractions:
 The central component managing navigation state:
 
 ```csharp
-public class Navigation<T> : INavigation<T> where T : INavigationItem
+public class Navigation<T> : INavigation<T> where T : class, INavigationItem
 {
     private readonly List<T> _items;
     private readonly IUndoRedoProvider? _undoRedoProvider;
@@ -139,7 +139,7 @@ public interface IUndoRedoProvider
 }
 
 // Persistence Provider
-public interface IPersistenceProvider<T> where T : INavigationItem
+public interface IPersistenceProvider<T> where T : class, INavigationItem
 {
     Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken);
     Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken);
@@ -153,10 +153,9 @@ public interface IPersistenceProvider<T> where T : INavigationItem
 Type-safe event notifications for navigation changes:
 
 ```csharp
-public delegate void NavigationEventHandler<T>(object sender, NavigationEventArgs<T> e)
-    where T : INavigationItem;
+public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
 
-public class NavigationEventArgs<T> : EventArgs where T : INavigationItem
+public class NavigationEventArgs<T> : EventArgs where T : class, INavigationItem
 {
     public NavigationType NavigationType { get; }
     public T? PreviousItem { get; }
@@ -212,7 +211,7 @@ public class CustomNavigationItem : INavigationItem
 
 ```csharp
 public class DatabasePersistenceProvider<T> : IPersistenceProvider<T>
-    where T : INavigationItem
+    where T : class, INavigationItem
 {
     // Database-specific persistence implementation
 }

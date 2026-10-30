@@ -213,16 +213,16 @@ Use the factory for consistent navigation stack creation:
 ```csharp
 // Set up factory with default providers
 var defaultUndoProvider = new SimpleUndoRedoProvider();
-var factory = new NavigationFactory(defaultUndoProvider);
+var factory = new NavigationStackFactory(defaultUndoProvider);
 
 // Create different types of navigation stacks
-var basicStack = factory.CreateBasicNavigation<NavigationItem>();
-var undoStack = factory.CreateNavigation<NavigationItem>(new SimpleUndoRedoProvider());
-var persistentStack = factory.CreateNavigation<NavigationItem>(
+var basicStack = factory.CreateBasicNavigationStack<NavigationItem>();
+var undoStack = factory.CreateNavigationStack<NavigationItem>(new SimpleUndoRedoProvider());
+var persistentStack = factory.CreateNavigationStack<NavigationItem>(
     new JsonFilePersistenceProvider<NavigationItem>("nav.json"));
 
 // With dependency injection
-var factory = new NavigationFactory(
+var factory = new NavigationStackFactory(
     defaultUndoProvider,
     serviceType => serviceProvider.GetService(serviceType));
 ```
@@ -232,7 +232,7 @@ var factory = new NavigationFactory(
 ### Navigation Management
 
 ```csharp
-public class NavigationManager<T> where T : INavigationItem
+public class NavigationManager<T> where T : class, INavigationItem
 {
     private readonly INavigation<T> _navigationStack;
 
@@ -278,7 +278,7 @@ public class NavigationManager<T> where T : INavigationItem
 
 ```csharp
 public async Task<bool> SafeNavigateAsync<T>(INavigation<T> stack, T item)
-    where T : INavigationItem
+    where T : class, INavigationItem
 {
     try
     {

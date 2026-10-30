@@ -494,7 +494,7 @@ public class NavigationStackTests
 		_navigation.NavigateTo(new NavigationItem("login", "Login"));
 
 		// Assert: both navigations are undoable, one at a time
-		Assert.AreEqual(2, _undoRedoProvider!.GetUndoStack().Count);
+		Assert.HasCount(2, _undoRedoProvider!.GetUndoStack());
 	}
 
 	private void NavigateToABC()

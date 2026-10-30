@@ -28,11 +28,11 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	private readonly Lock _sync = new();
 
 	/// <summary>
-	/// The stacks this thread is restoring for an undo or redo, so a <see cref="NavigationChanged"/> handler that
-	/// navigates in response is not recorded as a new action in the middle of the undo or redo
+	/// The threads raising <see cref="NavigationChanged"/> from an undo or redo of this stack, with how deeply each is
+	/// nested, so a handler that navigates in response is not recorded as a new action in the middle of the undo or
+	/// redo. Guarded by <see cref="_sync"/>.
 	/// </summary>
-	[ThreadStatic]
-	private static List<Navigation<T>>? t_restoring;
+	private readonly Dictionary<int, int> _restoringThreads = [];
 
 	/// <inheritdoc />
 	public T? Current
@@ -321,15 +321,25 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 
 		// A handler that redirects here would otherwise register an action while the provider is still applying
 		// this one, which clears the redo history and leaves an undo entry that only re-applies the redirect
-		t_restoring ??= [];
-		t_restoring.Add(this);
+		int thread = Environment.CurrentManagedThreadId;
+		lock (_sync)
+		{
+			_restoringThreads[thread] = _restoringThreads.GetValueOrDefault(thread) + 1;
+		}
+
 		try
 		{
 			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
 		}
 		finally
 		{
-			t_restoring.RemoveAt(t_restoring.LastIndexOf(this));
+			lock (_sync)
+			{
+				if (--_restoringThreads[thread] == 0)
+				{
+					_restoringThreads.Remove(thread);
+				}
+			}
 		}
 	}
 
@@ -365,7 +375,7 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// </remarks>
 	private void RegisterUndo(List<T>? beforeItems, int beforeIndex, string description)
 	{
-		if (undoRedoProvider == null || beforeItems == null || (t_restoring?.Contains(this) ?? false))
+		if (undoRedoProvider == null || beforeItems == null || _restoringThreads.ContainsKey(Environment.CurrentManagedThreadId))
 		{
 			return;
 		}

@@ -407,6 +407,40 @@ public class NavigationStackTests
 		Assert.IsFalse(_navigation.CanGoForward);
 	}
 
+	[TestMethod]
+	public void FromNavigationStack_WhileAnotherThreadNavigatesAndClears_PairsTheHistoryWithItsOwnCurrentIndex()
+	{
+		// Arrange: no undo provider, so the writer changes the stack as fast as it can
+		Navigation<NavigationItem> navigation = new();
+		using CancellationTokenSource stop = new();
+		Task writer = Task.Run(() =>
+		{
+			int i = 0;
+			while (!stop.IsCancellationRequested)
+			{
+				navigation.NavigateTo(new NavigationItem("p" + i, "P" + i));
+				navigation.NavigateTo(new NavigationItem("q" + i, "Q" + i));
+				navigation.Clear();
+				i++;
+			}
+		});
+
+		// Act & Assert: the writer only ever navigates forward from the end, so the current item is always the last
+		try
+		{
+			for (int i = 0; i < 100_000; i++)
+			{
+				NavigationState<NavigationItem> state = NavigationState<NavigationItem>.FromNavigationStack(navigation);
+				Assert.AreEqual(state.Items.Count - 1, state.CurrentIndex);
+			}
+		}
+		finally
+		{
+			stop.Cancel();
+			writer.Wait();
+		}
+	}
+
 	private void NavigateToABC()
 	{
 		_navigation!.NavigateTo(new NavigationItem("A", "A"));

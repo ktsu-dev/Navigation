@@ -441,6 +441,7 @@ public class NavigationStackTests
 		// Redoing through the redirect gets back to settings
 		while (_undoRedoProvider.Redo())
 		{
+			// Each Redo() moves one entry forward; keep going until the redo stack is empty
 		}
 
 		AssertStack("login,home,settings", "settings");

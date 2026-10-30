@@ -217,15 +217,21 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return;
 		}
 
-		// Read the history and current index in one step, so a navigation on another thread cannot land between them
-		NavigationState<T> state;
-		lock (_sync)
-		{
-			List<T> items = [.. _items];
-			state = new NavigationState<T>(items, _currentIndex);
-		}
+		NavigationState<T> state = Snapshot();
 
 		await persistenceProvider.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Captures the history and current index in one step, so a navigation on another thread cannot land between them
+	/// </summary>
+	/// <returns>A navigation state whose current index is valid for its items</returns>
+	internal NavigationState<T> Snapshot()
+	{
+		lock (_sync)
+		{
+			return new NavigationState<T>([.. _items], _currentIndex);
+		}
 	}
 
 	/// <summary>

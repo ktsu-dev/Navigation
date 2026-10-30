@@ -15,12 +15,12 @@ public void ConfigureServices(IServiceCollection services)
     // Register core services
     services.AddSingleton<IUndoRedoProvider, SimpleUndoRedoProvider>();
     services.AddScoped(typeof(IPersistenceProvider<>), typeof(JsonFilePersistenceProvider<>));
-    services.AddScoped<NavigationFactory>();
+    services.AddScoped<NavigationStackFactory>();
 
     // Register navigation stacks
     services.AddScoped<INavigation<PageNavigationItem>>(provider =>
     {
-        var factory = provider.GetRequiredService<NavigationFactory>();
+        var factory = provider.GetRequiredService<NavigationStackFactory>();
         var persistenceProvider = provider.GetRequiredService<IPersistenceProvider<PageNavigationItem>>();
         return factory.CreateNavigation(persistenceProvider);
     });
@@ -88,11 +88,11 @@ public partial class App : Application
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                            "MyApp", "navigation.json")));
 
-        services.AddSingleton<NavigationFactory>();
+        services.AddSingleton<NavigationStackFactory>();
 
         services.AddSingleton<INavigation<ViewNavigationItem>>(provider =>
         {
-            var factory = provider.GetRequiredService<NavigationFactory>();
+            var factory = provider.GetRequiredService<NavigationStackFactory>();
             var undoProvider = provider.GetRequiredService<IUndoRedoProvider>();
             var persistenceProvider = provider.GetRequiredService<IPersistenceProvider<ViewNavigationItem>>();
             return factory.CreateNavigation(undoProvider, persistenceProvider);
@@ -156,14 +156,14 @@ public class NavigationModule : Module
                .InstancePerLifetimeScope();
 
         // Register factory
-        builder.RegisterType<NavigationFactory>()
+        builder.RegisterType<NavigationStackFactory>()
                .AsSelf()
                .SingleInstance();
 
         // Register navigation stacks
         builder.Register<INavigation<NavigationItem>>(context =>
         {
-            var factory = context.Resolve<NavigationFactory>();
+            var factory = context.Resolve<NavigationStackFactory>();
             var undoProvider = context.Resolve<IUndoRedoProvider>();
             var persistenceProvider = context.Resolve<IPersistenceProvider<NavigationItem>>();
             return factory.CreateNavigation(undoProvider, persistenceProvider);
@@ -291,7 +291,7 @@ public class NavigationState
 }
 
 public class DatabasePersistenceProvider<T> : IPersistenceProvider<T>
-    where T : INavigationItem
+    where T : class, INavigationItem
 {
     private readonly NavigationDbContext _context;
     private readonly string _userId;
@@ -377,7 +377,7 @@ public class DatabasePersistenceProvider<T> : IPersistenceProvider<T>
 
 ```csharp
 public class RedisPersistenceProvider<T> : IPersistenceProvider<T>
-    where T : INavigationItem
+    where T : class, INavigationItem
 {
     private readonly IDatabase _database;
     private readonly string _keyPrefix;
@@ -722,7 +722,7 @@ public class NavigationServiceFactory
         _config = config.Value;
     }
 
-    public INavigation<T> CreateNavigation<T>() where T : INavigationItem
+    public INavigation<T> CreateNavigationStack<T>() where T : class, INavigationItem
     {
         var undoProvider = CreateUndoRedoProvider();
         var persistenceProvider = CreatePersistenceProvider<T>();
@@ -741,7 +741,7 @@ public class NavigationServiceFactory
         };
     }
 
-    private IPersistenceProvider<T> CreatePersistenceProvider<T>() where T : INavigationItem
+    private IPersistenceProvider<T> CreatePersistenceProvider<T>() where T : class, INavigationItem
     {
         return _config.Persistence.Provider switch
         {

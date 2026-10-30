@@ -171,12 +171,24 @@ public class DocumentNavigationItem : INavigationItem
     private readonly Dictionary<string, object> _metadata = new();
     
     public DocumentNavigationItem(string filePath, string displayName)
+        : this(filePath, displayName, DateTime.UtcNow, null)
     {
-        Id = filePath;
-        DisplayName = displayName;
-        CreatedAt = DateTime.UtcNow;
         SetMetadata("FilePath", filePath);
         SetMetadata("FileSize", new FileInfo(filePath).Length);
+    }
+    
+    // JsonFilePersistenceProvider reloads saved items through this constructor. System.Text.Json
+    // needs each parameter to have the same name and type as the property it sets.
+    [JsonConstructor]
+    public DocumentNavigationItem(string id, string displayName, DateTime createdAt, IReadOnlyDictionary<string, object>? metadata)
+    {
+        Id = id;
+        DisplayName = displayName;
+        CreatedAt = createdAt;
+        foreach (var entry in metadata ?? new Dictionary<string, object>())
+        {
+            _metadata[entry.Key] = entry.Value;
+        }
     }
     
     public void SetMetadata(string key, object value) => _metadata[key] = value;

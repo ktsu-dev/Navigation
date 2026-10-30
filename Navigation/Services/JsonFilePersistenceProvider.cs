@@ -87,6 +87,13 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 			// If the saved state is invalid (for example, a current index outside the items), return null
 			return null;
 		}
+		catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
+		{
+			// System.Text.Json saves some item types it cannot construct again: an interface or abstract T,
+			// or a constructor whose parameters don't match properties. Degrade the same way, rather than
+			// throwing on every start-up until the state file is deleted
+			return null;
+		}
 	}
 
 	/// <inheritdoc />

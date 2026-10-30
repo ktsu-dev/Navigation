@@ -41,6 +41,7 @@ Perfect for applications that need robust navigation management, such as:
 - ✅ Configurable history size limits
 - ✅ State change notifications
 - ✅ Error handling during undo/redo operations
+- ✅ Redirects made by a `NavigationChanged` handler during an undo or redo are not recorded as new actions, so the redo history survives them
 
 ### Persistence
 - ✅ JSON file persistence provider

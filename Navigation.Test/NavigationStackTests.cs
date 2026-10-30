@@ -407,6 +407,95 @@ public class NavigationStackTests
 		Assert.IsFalse(_navigation.CanGoForward);
 	}
 
+	[TestMethod]
+	public void Undo_WithAHandlerThatRedirects_KeepsTheRedoHistoryAndRunsOut()
+	{
+		// Arrange: navigating to login redirects to home, as a route guard would
+		NavigationItem home = new("home", "Home");
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (e.CurrentItem?.Id == "login")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+		_navigation.NavigateTo(new NavigationItem("login", "Login"));
+		_navigation.NavigateTo(new NavigationItem("settings", "Settings"));
+		AssertStack("login,home,settings", "settings");
+
+		// Act & Assert: the first undo leaves settings on the redo stack
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("login,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		// The second undo lands on login and is redirected, which must not clear the redo history
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack("login,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack(string.Empty, null);
+		Assert.IsFalse(_undoRedoProvider.CanUndo);
+		Assert.IsFalse(_undoRedoProvider.Undo());
+
+		// Redoing through the redirect gets back to settings
+		while (_undoRedoProvider.Redo())
+		{
+		}
+
+		AssertStack("login,home,settings", "settings");
+	}
+
+	[TestMethod]
+	public void Redo_WithAHandlerThatRedirects_KeepsTheRestOfTheRedoHistory()
+	{
+		// Arrange: a handler that only starts redirecting after the history is built
+		NavigateToABC();
+		NavigationItem home = new("home", "Home");
+		bool redirect = false;
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (redirect && e.CurrentItem?.Id == "B")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+		_undoRedoProvider!.Undo();
+		_undoRedoProvider.Undo();
+		AssertStack("A", "A");
+		redirect = true;
+
+		// Act: redoing to B is redirected to home
+		Assert.IsTrue(_undoRedoProvider.Redo());
+
+		// Assert: the redirect happened, but C is still there to redo
+		AssertStack("A,B,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+		Assert.IsTrue(_undoRedoProvider.Redo());
+		AssertStack("A,B,C", "C");
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
+	public void NavigateTo_FromAHandlerOutsideUndo_IsStillRecorded()
+	{
+		// Arrange
+		NavigationItem home = new("home", "Home");
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (e.NavigationType == NavigationType.NavigateTo && e.CurrentItem?.Id == "login")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+
+		// Act
+		_navigation.NavigateTo(new NavigationItem("login", "Login"));
+
+		// Assert: both navigations are undoable, one at a time
+		Assert.AreEqual(2, _undoRedoProvider!.GetUndoStack().Count);
+	}
+
 	private void NavigateToABC()
 	{
 		_navigation!.NavigateTo(new NavigationItem("A", "A"));
@@ -414,7 +503,7 @@ public class NavigationStackTests
 		_navigation.NavigateTo(new NavigationItem("C", "C"));
 	}
 
-	private void AssertStack(string expectedIds, string expectedCurrentId)
+	private void AssertStack(string expectedIds, string? expectedCurrentId)
 	{
 		Assert.AreEqual(expectedIds, string.Join(",", _navigation!.GetHistory().Select(item => item.Id)));
 		Assert.AreEqual(expectedCurrentId, _navigation.Current?.Id);

@@ -27,6 +27,13 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	private int _currentIndex = -1;
 	private readonly Lock _sync = new();
 
+	/// <summary>
+	/// The stacks this thread is restoring for an undo or redo, so a <see cref="NavigationChanged"/> handler that
+	/// navigates in response is not recorded as a new action in the middle of the undo or redo
+	/// </summary>
+	[ThreadStatic]
+	private static List<Navigation<T>>? t_restoring;
+
 	/// <inheritdoc />
 	public T? Current
 	{
@@ -312,7 +319,18 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			currentItem = CurrentUnlocked;
 		}
 
-		OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		// A handler that redirects here would otherwise register an action while the provider is still applying
+		// this one, which clears the redo history and leaves an undo entry that only re-applies the redirect
+		t_restoring ??= [];
+		t_restoring.Add(this);
+		try
+		{
+			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		}
+		finally
+		{
+			t_restoring.RemoveAt(t_restoring.LastIndexOf(this));
+		}
 	}
 
 	/// <summary>
@@ -342,11 +360,12 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <param name="beforeIndex">The current index before the change</param>
 	/// <param name="description">A description of the change</param>
 	/// <remarks>
-	/// Called under the lock, so actions reach the provider in the order the changes were made
+	/// Called under the lock, so actions reach the provider in the order the changes were made. Nothing is recorded
+	/// for a change made by a <see cref="NavigationChanged"/> handler while this stack is restoring an undo or redo.
 	/// </remarks>
 	private void RegisterUndo(List<T>? beforeItems, int beforeIndex, string description)
 	{
-		if (undoRedoProvider == null || beforeItems == null)
+		if (undoRedoProvider == null || beforeItems == null || (t_restoring?.Contains(this) ?? false))
 		{
 			return;
 		}

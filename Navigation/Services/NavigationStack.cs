@@ -320,8 +320,19 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		T? currentItem;
 		lock (_sync)
 		{
+			List<T> restored = [.. items];
+
+			// A provider that executes an action as it registers it re-applies a change that is already in place.
+			// Raising NavigationChanged for that would report the navigation twice, so a restore that changes
+			// nothing changes nothing. Items are compared by reference, because items with the same Id compare equal
+			// while their other properties can still differ
+			if (currentIndex == _currentIndex && IsSameItems(restored))
+			{
+				return;
+			}
+
 			previousItem = CurrentUnlocked;
-			ReplaceItems(items, currentIndex);
+			ReplaceItems(restored, currentIndex);
 			currentItem = CurrentUnlocked;
 		}
 
@@ -347,6 +358,29 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Reports whether the stack already holds exactly these item instances, in this order; the caller holds the lock
+	/// </summary>
+	/// <param name="items">The items to compare with</param>
+	/// <returns>True if every item is the same instance as the stack's item at that position</returns>
+	private bool IsSameItems(List<T> items)
+	{
+		if (items.Count != _items.Count)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < items.Count; i++)
+		{
+			if (!ReferenceEquals(items[i], _items[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/// <summary>

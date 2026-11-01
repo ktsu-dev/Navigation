@@ -201,8 +201,10 @@ public class CommandBasedUndoRedoProvider : IUndoRedoProvider
 
     public void RegisterAction(IUndoableAction action, string description)
     {
+        // The navigation has already happened, so record the command without running it.
+        // Execute is only for redo; running it here would apply the change a second time.
         var command = new NavigationCommand(action, description);
-        _commandManager.ExecuteCommand(command);
+        _commandManager.RecordExecutedCommand(command);
     }
 
     public bool Undo() => _commandManager.Undo();

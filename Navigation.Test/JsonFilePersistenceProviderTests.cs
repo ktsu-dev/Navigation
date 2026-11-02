@@ -87,6 +87,7 @@ public class JsonFilePersistenceProviderTests
 		}
 		catch (OperationCanceledException)
 		{
+			// Expected: the save was cancelled mid-write, which is the case under test
 		}
 
 		// Assert

@@ -2,6 +2,7 @@
 
 Changes since v1.5.1:
 
+- Add a SessionStart hook for Claude Code cloud sessions (#91) (matt-edmondson)
 - Save navigation state through a temporary file [patch] (#105) (matt-edmondson)
 - Report each navigation once when a provider executes actions as it registers them [patch] (#103) (matt-edmondson)
 - Merge remote-tracking branch 'origin/main' into fix/95-redirect-during-undo (matt-edmondson)

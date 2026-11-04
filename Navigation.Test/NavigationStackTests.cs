@@ -11,6 +11,8 @@ using ktsu.Navigation.Services;
 [TestClass]
 public class NavigationStackTests
 {
+	private static readonly string[] OneEventPerNavigation = ["NavigateTo ->a", "NavigateTo a->b", "GoBack b->a"];
+
 	private Navigation<NavigationItem>? _navigation;
 	private SimpleUndoRedoProvider? _undoRedoProvider;
 	private InMemoryPersistenceProvider<NavigationItem>? _persistenceProvider;
@@ -528,6 +530,52 @@ public class NavigationStackTests
 		{
 			stop.Cancel();
 			writer.Wait();
+		}
+	}
+
+	[TestMethod]
+	public void NavigationChanged_WithAProviderThatExecutesOnRegister_IsRaisedOncePerNavigation()
+	{
+		// Arrange: a provider shaped like a command system that runs each command as it records it
+		ExecuteOnRegisterProvider provider = new();
+		Navigation<NavigationItem> navigation = new(provider);
+		List<string> events = [];
+		navigation.NavigationChanged += (_, e) => events.Add($"{e.NavigationType} {e.PreviousItem?.Id}->{e.CurrentItem?.Id}");
+
+		// Act
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+		navigation.GoBack();
+
+		// Assert
+		CollectionAssert.AreEqual(OneEventPerNavigation, events, string.Join("; ", events));
+		Assert.AreEqual(3, provider.Registered);
+		Assert.AreEqual("a", navigation.Current?.Id);
+	}
+
+	private sealed class ExecuteOnRegisterProvider : IUndoRedoProvider
+	{
+		public int Registered { get; private set; }
+
+		public bool CanUndo => false;
+
+		public bool CanRedo => false;
+
+		public event EventHandler? StateChanged;
+
+		public void RegisterAction(IUndoableAction action, string description)
+		{
+			action.Execute();
+			Registered++;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		public bool Undo() => false;
+
+		public bool Redo() => false;
+
+		public void Clear()
+		{
 		}
 	}
 

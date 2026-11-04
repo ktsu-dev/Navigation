@@ -27,6 +27,13 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	private int _currentIndex = -1;
 	private readonly Lock _sync = new();
 
+	/// <summary>
+	/// The threads raising <see cref="NavigationChanged"/> from an undo or redo of this stack, with how deeply each is
+	/// nested, so a handler that navigates in response is not recorded as a new action in the middle of the undo or
+	/// redo. Guarded by <see cref="_sync"/>.
+	/// </summary>
+	private readonly Dictionary<int, int> _restoringThreads = [];
+
 	/// <inheritdoc />
 	public T? Current
 	{
@@ -217,15 +224,21 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			return;
 		}
 
-		// Read the history and current index in one step, so a navigation on another thread cannot land between them
-		NavigationState<T> state;
-		lock (_sync)
-		{
-			List<T> items = [.. _items];
-			state = new NavigationState<T>(items, _currentIndex);
-		}
+		NavigationState<T> state = Snapshot();
 
 		await persistenceProvider.SaveStateAsync(state, cancellationToken).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Captures the history and current index in one step, so a navigation on another thread cannot land between them
+	/// </summary>
+	/// <returns>A navigation state whose current index is valid for its items</returns>
+	internal NavigationState<T> Snapshot()
+	{
+		lock (_sync)
+		{
+			return new NavigationState<T>([.. _items], _currentIndex);
+		}
 	}
 
 	/// <summary>
@@ -307,12 +320,67 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		T? currentItem;
 		lock (_sync)
 		{
+			List<T> restored = [.. items];
+
+			// A provider that executes an action as it registers it re-applies a change that is already in place.
+			// Raising NavigationChanged for that would report the navigation twice, so a restore that changes
+			// nothing changes nothing. Items are compared by reference, because items with the same Id compare equal
+			// while their other properties can still differ
+			if (currentIndex == _currentIndex && IsSameItems(restored))
+			{
+				return;
+			}
+
 			previousItem = CurrentUnlocked;
-			ReplaceItems(items, currentIndex);
+			ReplaceItems(restored, currentIndex);
 			currentItem = CurrentUnlocked;
 		}
 
-		OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		// A handler that redirects here would otherwise register an action while the provider is still applying
+		// this one, which clears the redo history and leaves an undo entry that only re-applies the redirect
+		int thread = Environment.CurrentManagedThreadId;
+		lock (_sync)
+		{
+			_restoringThreads[thread] = _restoringThreads.GetValueOrDefault(thread) + 1;
+		}
+
+		try
+		{
+			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		}
+		finally
+		{
+			lock (_sync)
+			{
+				if (--_restoringThreads[thread] == 0)
+				{
+					_restoringThreads.Remove(thread);
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Reports whether the stack already holds exactly these item instances, in this order; the caller holds the lock
+	/// </summary>
+	/// <param name="items">The items to compare with</param>
+	/// <returns>True if every item is the same instance as the stack's item at that position</returns>
+	private bool IsSameItems(List<T> items)
+	{
+		if (items.Count != _items.Count)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < items.Count; i++)
+		{
+			if (!ReferenceEquals(items[i], _items[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/// <summary>
@@ -342,11 +410,12 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// <param name="beforeIndex">The current index before the change</param>
 	/// <param name="description">A description of the change</param>
 	/// <remarks>
-	/// Called under the lock, so actions reach the provider in the order the changes were made
+	/// Called under the lock, so actions reach the provider in the order the changes were made. Nothing is recorded
+	/// for a change made by a <see cref="NavigationChanged"/> handler while this stack is restoring an undo or redo.
 	/// </remarks>
 	private void RegisterUndo(List<T>? beforeItems, int beforeIndex, string description)
 	{
-		if (undoRedoProvider == null || beforeItems == null)
+		if (undoRedoProvider == null || beforeItems == null || _restoringThreads.ContainsKey(Environment.CurrentManagedThreadId))
 		{
 			return;
 		}

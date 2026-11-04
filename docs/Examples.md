@@ -251,16 +251,16 @@ Console.WriteLine($"Can go back: {newStack.CanGoBack}"); // True
 ```csharp
 // Set up factory with default providers
 var defaultUndoProvider = new SimpleUndoRedoProvider();
-var factory = new NavigationFactory(defaultUndoProvider);
+var factory = new NavigationStackFactory(defaultUndoProvider);
 
 // Create different types of navigation stacks
-var basicStack = factory.CreateBasicNavigation<NavigationItem>();
-var undoStack = factory.CreateNavigation<NavigationItem>();
-var persistentStack = factory.CreateNavigation<NavigationItem>(
+var basicStack = factory.CreateBasicNavigationStack<NavigationItem>();
+var undoStack = factory.CreateNavigationStack<NavigationItem>();
+var persistentStack = factory.CreateNavigationStack<NavigationItem>(
     new JsonFilePersistenceProvider<NavigationItem>("nav.json"));
 
 // Full-featured stack
-var fullStack = factory.CreateNavigation<NavigationItem>(
+var fullStack = factory.CreateNavigationStack<NavigationItem>(
     new SimpleUndoRedoProvider(50),
     new JsonFilePersistenceProvider<NavigationItem>("full-nav.json"));
 ```

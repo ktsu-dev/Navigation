@@ -11,6 +11,8 @@ using ktsu.Navigation.Services;
 [TestClass]
 public class NavigationStackTests
 {
+	private static readonly string[] OneEventPerNavigation = ["NavigateTo ->a", "NavigateTo a->b", "GoBack b->a"];
+
 	private Navigation<NavigationItem>? _navigation;
 	private SimpleUndoRedoProvider? _undoRedoProvider;
 	private InMemoryPersistenceProvider<NavigationItem>? _persistenceProvider;
@@ -407,6 +409,176 @@ public class NavigationStackTests
 		Assert.IsFalse(_navigation.CanGoForward);
 	}
 
+	[TestMethod]
+	public void Undo_WithAHandlerThatRedirects_KeepsTheRedoHistoryAndRunsOut()
+	{
+		// Arrange: navigating to login redirects to home, as a route guard would
+		NavigationItem home = new("home", "Home");
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (e.CurrentItem?.Id == "login")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+		_navigation.NavigateTo(new NavigationItem("login", "Login"));
+		_navigation.NavigateTo(new NavigationItem("settings", "Settings"));
+		AssertStack("login,home,settings", "settings");
+
+		// Act & Assert: the first undo leaves settings on the redo stack
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("login,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		// The second undo lands on login and is redirected, which must not clear the redo history
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack("login,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack(string.Empty, null);
+		Assert.IsFalse(_undoRedoProvider.CanUndo);
+		Assert.IsFalse(_undoRedoProvider.Undo());
+
+		// Redoing through the redirect gets back to settings
+		while (_undoRedoProvider.Redo())
+		{
+			// Each Redo() moves one entry forward; keep going until the redo stack is empty
+		}
+
+		AssertStack("login,home,settings", "settings");
+	}
+
+	[TestMethod]
+	public void Redo_WithAHandlerThatRedirects_KeepsTheRestOfTheRedoHistory()
+	{
+		// Arrange: a handler that only starts redirecting after the history is built
+		NavigateToABC();
+		NavigationItem home = new("home", "Home");
+		bool redirect = false;
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (redirect && e.CurrentItem?.Id == "B")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+		_undoRedoProvider!.Undo();
+		_undoRedoProvider.Undo();
+		AssertStack("A", "A");
+		redirect = true;
+
+		// Act: redoing to B is redirected to home
+		Assert.IsTrue(_undoRedoProvider.Redo());
+
+		// Assert: the redirect happened, but C is still there to redo
+		AssertStack("A,B,home", "home");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+		Assert.IsTrue(_undoRedoProvider.Redo());
+		AssertStack("A,B,C", "C");
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
+	public void NavigateTo_FromAHandlerOutsideUndo_IsStillRecorded()
+	{
+		// Arrange
+		NavigationItem home = new("home", "Home");
+		_navigation!.NavigationChanged += (_, e) =>
+		{
+			if (e.NavigationType == NavigationType.NavigateTo && e.CurrentItem?.Id == "login")
+			{
+				_navigation.NavigateTo(home);
+			}
+		};
+
+		// Act
+		_navigation.NavigateTo(new NavigationItem("login", "Login"));
+
+		// Assert: both navigations are undoable, one at a time
+		Assert.HasCount(2, _undoRedoProvider!.GetUndoStack());
+	}
+
+	[TestMethod]
+	public void FromNavigationStack_WhileAnotherThreadNavigatesAndClears_PairsTheHistoryWithItsOwnCurrentIndex()
+	{
+		// Arrange: no undo provider, so the writer changes the stack as fast as it can
+		Navigation<NavigationItem> navigation = new();
+		using CancellationTokenSource stop = new();
+		Task writer = Task.Run(() =>
+		{
+			int i = 0;
+			while (!stop.IsCancellationRequested)
+			{
+				navigation.NavigateTo(new NavigationItem("p" + i, "P" + i));
+				navigation.NavigateTo(new NavigationItem("q" + i, "Q" + i));
+				navigation.Clear();
+				i++;
+			}
+		});
+
+		// Act & Assert: the writer only ever navigates forward from the end, so the current item is always the last
+		try
+		{
+			for (int i = 0; i < 100_000; i++)
+			{
+				NavigationState<NavigationItem> state = NavigationState<NavigationItem>.FromNavigationStack(navigation);
+				Assert.AreEqual(state.Items.Count - 1, state.CurrentIndex);
+			}
+		}
+		finally
+		{
+			stop.Cancel();
+			writer.Wait();
+		}
+	}
+
+	[TestMethod]
+	public void NavigationChanged_WithAProviderThatExecutesOnRegister_IsRaisedOncePerNavigation()
+	{
+		// Arrange: a provider shaped like a command system that runs each command as it records it
+		ExecuteOnRegisterProvider provider = new();
+		Navigation<NavigationItem> navigation = new(provider);
+		List<string> events = [];
+		navigation.NavigationChanged += (_, e) => events.Add($"{e.NavigationType} {e.PreviousItem?.Id}->{e.CurrentItem?.Id}");
+
+		// Act
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+		navigation.GoBack();
+
+		// Assert
+		CollectionAssert.AreEqual(OneEventPerNavigation, events, string.Join("; ", events));
+		Assert.AreEqual(3, provider.Registered);
+		Assert.AreEqual("a", navigation.Current?.Id);
+	}
+
+	private sealed class ExecuteOnRegisterProvider : IUndoRedoProvider
+	{
+		public int Registered { get; private set; }
+
+		public bool CanUndo => false;
+
+		public bool CanRedo => false;
+
+		public event EventHandler? StateChanged;
+
+		public void RegisterAction(IUndoableAction action, string description)
+		{
+			action.Execute();
+			Registered++;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		public bool Undo() => false;
+
+		public bool Redo() => false;
+
+		public void Clear()
+		{
+		}
+	}
+
 	private void NavigateToABC()
 	{
 		_navigation!.NavigateTo(new NavigationItem("A", "A"));
@@ -414,7 +586,7 @@ public class NavigationStackTests
 		_navigation.NavigateTo(new NavigationItem("C", "C"));
 	}
 
-	private void AssertStack(string expectedIds, string expectedCurrentId)
+	private void AssertStack(string expectedIds, string? expectedCurrentId)
 	{
 		Assert.AreEqual(expectedIds, string.Join(",", _navigation!.GetHistory().Select(item => item.Id)));
 		Assert.AreEqual(expectedCurrentId, _navigation.Current?.Id);

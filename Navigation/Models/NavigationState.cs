@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using ktsu.Navigation.Contracts;
+using ktsu.Navigation.Services;
 
 /// <summary>
 /// Represents the state of a navigation stack that can be persisted
@@ -99,9 +100,19 @@ public class NavigationState<T> : INavigationState<T> where T : class, INavigati
 	/// </summary>
 	/// <param name="navigation">The navigation to create state from</param>
 	/// <returns>A new navigation state instance</returns>
+	/// <remarks>
+	/// For a <see cref="Navigation{T}"/> the history and current index are read under its lock in one step, so a
+	/// navigation on another thread cannot pair one with the other. Any other <see cref="INavigation{T}"/> is read
+	/// through three separate calls, which is only consistent if nothing changes it in the meantime.
+	/// </remarks>
 	public static NavigationState<T> FromNavigationStack(INavigation<T> navigation)
 	{
 		Ensure.NotNull(navigation);
+
+		if (navigation is Navigation<T> stack)
+		{
+			return stack.Snapshot();
+		}
 
 		IReadOnlyList<T> history = navigation.GetHistory();
 		// The back stack holds every item before the current one, so its size is the current index.

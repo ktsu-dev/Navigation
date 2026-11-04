@@ -4,6 +4,7 @@ namespace ktsu.Navigation.Services;
 
 using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,7 +52,60 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 		}
 
 		string json = JsonSerializer.Serialize(state, _jsonOptions);
-		await File.WriteAllTextAsync(_filePath, json, cancellationToken).ConfigureAwait(false);
+		byte[] bytes = Utf8NoBom.GetBytes(json);
+
+		// Writing over the live file truncates it first, so a cancelled token, a crash or a full disk
+		// part way through the write destroyed the last good save. Write the new state next to it and
+		// swap it in only once it is complete and on disk.
+		string tempPath = $"{_filePath}.{Guid.NewGuid():N}.tmp";
+		try
+		{
+			using (FileStream stream = new(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+			{
+				await stream.WriteAsync(bytes.AsMemory(), cancellationToken).ConfigureAwait(false);
+				await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+				// There is no asynchronous way to flush through the OS cache, and without it a power loss
+				// just after the swap below can still leave an empty file behind the new name
+#pragma warning disable CA1849 // Call async methods when in an async method
+				stream.Flush(flushToDisk: true);
+#pragma warning restore CA1849
+			}
+
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (File.Exists(_filePath))
+			{
+				File.Replace(tempPath, _filePath, destinationBackupFileName: null);
+			}
+			else
+			{
+				File.Move(tempPath, _filePath);
+			}
+		}
+		catch
+		{
+			TryDelete(tempPath);
+			throw;
+		}
+	}
+
+	private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+	private static void TryDelete(string path)
+	{
+		try
+		{
+			File.Delete(path);
+		}
+		catch (IOException)
+		{
+			// Best effort: a leftover temporary file never replaces the saved state
+		}
+		catch (UnauthorizedAccessException)
+		{
+			// Best effort, as above
+		}
 	}
 
 	/// <inheritdoc />
@@ -85,6 +139,13 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 		catch (ArgumentException)
 		{
 			// If the saved state is invalid (for example, a current index outside the items), return null
+			return null;
+		}
+		catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
+		{
+			// System.Text.Json saves some item types it cannot construct again: an interface or abstract T,
+			// or a constructor whose parameters don't match properties. Degrade the same way, rather than
+			// throwing on every start-up until the state file is deleted
 			return null;
 		}
 	}

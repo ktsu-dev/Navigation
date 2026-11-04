@@ -57,7 +57,7 @@ This document explains the key design decisions and architectural choices made i
 ### Generic Type Constraints
 
 ```csharp
-public interface INavigation<T> where T : INavigationItem
+public interface INavigation<T> where T : class, INavigationItem
 ```
 
 **Decision**: Use generic type constraints for navigation items.
@@ -75,7 +75,7 @@ public interface INavigation<T> where T : INavigationItem
 ### Event-Driven Architecture
 
 ```csharp
-public event NavigationEventHandler<T>? NavigationChanged;
+public event EventHandler<NavigationEventArgs<T>>? NavigationChanged;
 ```
 
 **Decision**: Use events for navigation notifications.
@@ -313,7 +313,7 @@ public JsonFilePersistenceProvider(string filePath, JsonSerializerOptions? jsonO
 
 ```csharp
 // Simple factory usage
-var stack = factory.CreateBasicNavigation<NavigationItem>();
+var stack = factory.CreateBasicNavigationStack<NavigationItem>();
 
 // Advanced direct usage
 var stack = new Navigation<NavigationItem>(customUndoProvider, customPersistenceProvider);

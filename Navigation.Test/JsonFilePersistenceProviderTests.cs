@@ -56,6 +56,69 @@ public class JsonFilePersistenceProviderTests
 		Assert.AreEqual("c", string.Join(",", restored.GetForwardStack().Select(item => item.Id)));
 	}
 
+	private string[] GetTemporaryFiles() =>
+		Directory.GetFiles(Path.GetDirectoryName(_filePath!)!, $"{Path.GetFileName(_filePath!)}.*.tmp");
+
+	[TestMethod]
+	public async Task SaveStateAsync_Cancelled_KeepsThePreviousSaveLoadable()
+	{
+		// Arrange: a good save, then a second save large enough to still be writing when cancelled
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		for (int i = 0; i < 100_000; i++)
+		{
+			navigation.NavigateTo(new NavigationItem($"p{i}", $"Page {i}"));
+		}
+
+		// Act: serialization runs before the first await, so cancelling as soon as the call returns
+		// lands in the middle of the file write
+		using CancellationTokenSource cancellation = new();
+		Task save = navigation.SaveStateAsync(cancellation.Token);
+		await cancellation.CancelAsync().ConfigureAwait(false);
+
+		try
+		{
+			await save.ConfigureAwait(false);
+			Assert.Inconclusive("The save finished before it could be cancelled, so there is nothing to check.");
+		}
+		catch (OperationCanceledException)
+		{
+			// Expected: the save was cancelled mid-write, which is the case under test
+		}
+
+		// Assert
+		Navigation<NavigationItem> restored = new(null, provider);
+		Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false), "The previous save was destroyed by the cancelled one.");
+		Assert.AreEqual(2, restored.Count);
+		Assert.AreEqual("b", restored.Current?.Id);
+		Assert.IsEmpty(GetTemporaryFiles());
+	}
+
+	[TestMethod]
+	public async Task SaveStateAsync_OverAnExistingSave_ReplacesItAndLeavesNoTemporaryFile()
+	{
+		// Arrange
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+
+		// Act
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Navigation<NavigationItem> restored = new(null, provider);
+		Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false));
+		Assert.AreEqual("b", restored.Current?.Id);
+		Assert.AreEqual(2, restored.Count);
+		Assert.IsEmpty(GetTemporaryFiles());
+	}
+
 	[TestMethod]
 	public async Task LoadStateAsync_UnreadableData_ReturnsNull()
 	{
@@ -65,6 +128,74 @@ public class JsonFilePersistenceProviderTests
 
 		// Act & Assert
 		Assert.IsNull(await provider.LoadStateAsync().ConfigureAwait(false));
+	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_ItemTypeWithUnboundConstructorParameter_ReturnsFalseInsteadOfThrowing()
+	{
+		// Arrange
+		string document = Path.GetTempFileName();
+		try
+		{
+			JsonFilePersistenceProvider<UnboundConstructorItem> provider = new(_filePath!);
+			Navigation<UnboundConstructorItem> navigation = new(null, provider);
+			navigation.NavigateTo(new UnboundConstructorItem(document, "Doc"));
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+
+			// Act
+			Navigation<UnboundConstructorItem> restored = new(null, provider);
+			bool loaded = await restored.LoadStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsTrue(await provider.HasSavedStateAsync().ConfigureAwait(false));
+			Assert.IsFalse(loaded);
+			Assert.IsNull(restored.Current);
+		}
+		finally
+		{
+			File.Delete(document);
+		}
+	}
+
+	[TestMethod]
+	public async Task LoadStateAsync_InterfaceItemType_ReturnsNullInsteadOfThrowing()
+	{
+		// Arrange
+		JsonFilePersistenceProvider<INavigationItem> provider = new(_filePath!);
+		Navigation<INavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Act & Assert
+		Assert.IsNull(await provider.LoadStateAsync().ConfigureAwait(false));
+	}
+
+	[TestMethod]
+	public async Task SaveThenLoad_ReadmeCustomItem_RoundTrips()
+	{
+		// Arrange
+		string document = Path.GetTempFileName();
+		try
+		{
+			JsonFilePersistenceProvider<ReadmeDocumentItem> provider = new(_filePath!);
+			Navigation<ReadmeDocumentItem> navigation = new(null, provider);
+			navigation.NavigateTo(new ReadmeDocumentItem(document, "My Document"));
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+
+			// Act
+			Navigation<ReadmeDocumentItem> restored = new(null, provider);
+			bool loaded = await restored.LoadStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsTrue(loaded);
+			Assert.AreEqual(document, restored.Current?.Id);
+			Assert.AreEqual("My Document", restored.Current?.DisplayName);
+			Assert.AreEqual(document, ((JsonElement)restored.Current!.Metadata["FilePath"]).GetString());
+		}
+		finally
+		{
+			File.Delete(document);
+		}
 	}
 
 	[TestMethod]
@@ -234,4 +365,58 @@ public class JsonFilePersistenceProviderTests
 			File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
 		}
 	}
+}
+
+/// <summary>The README's custom item before it gained a JSON constructor: <c>filePath</c> binds to no property.</summary>
+public class UnboundConstructorItem : INavigationItem
+{
+	private readonly Dictionary<string, object> _metadata = [];
+
+	public UnboundConstructorItem(string filePath, string displayName)
+	{
+		Id = filePath;
+		DisplayName = displayName;
+		CreatedAt = DateTime.UtcNow;
+		SetMetadata("FilePath", filePath);
+		SetMetadata("FileSize", new FileInfo(filePath).Length);
+	}
+
+	public string Id { get; }
+	public string DisplayName { get; set; }
+	public DateTime CreatedAt { get; }
+	public IReadOnlyDictionary<string, object> Metadata => _metadata.AsReadOnly();
+	public void SetMetadata(string key, object value) => _metadata[key] = value;
+	public bool RemoveMetadata(string key) => _metadata.Remove(key);
+}
+
+/// <summary>The custom item exactly as the README shows it.</summary>
+public class ReadmeDocumentItem : INavigationItem
+{
+	private readonly Dictionary<string, object> _metadata = [];
+
+	public ReadmeDocumentItem(string filePath, string displayName)
+		: this(filePath, displayName, DateTime.UtcNow, null)
+	{
+		SetMetadata("FilePath", filePath);
+		SetMetadata("FileSize", new FileInfo(filePath).Length);
+	}
+
+	[System.Text.Json.Serialization.JsonConstructor]
+	public ReadmeDocumentItem(string id, string displayName, DateTime createdAt, IReadOnlyDictionary<string, object>? metadata)
+	{
+		Id = id;
+		DisplayName = displayName;
+		CreatedAt = createdAt;
+		foreach (KeyValuePair<string, object> entry in metadata ?? new Dictionary<string, object>())
+		{
+			_metadata[entry.Key] = entry.Value;
+		}
+	}
+
+	public string Id { get; }
+	public string DisplayName { get; set; }
+	public DateTime CreatedAt { get; }
+	public IReadOnlyDictionary<string, object> Metadata => _metadata.AsReadOnly();
+	public void SetMetadata(string key, object value) => _metadata[key] = value;
+	public bool RemoveMetadata(string key) => _metadata.Remove(key);
 }

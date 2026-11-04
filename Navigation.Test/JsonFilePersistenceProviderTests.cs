@@ -56,6 +56,69 @@ public class JsonFilePersistenceProviderTests
 		Assert.AreEqual("c", string.Join(",", restored.GetForwardStack().Select(item => item.Id)));
 	}
 
+	private string[] GetTemporaryFiles() =>
+		Directory.GetFiles(Path.GetDirectoryName(_filePath!)!, $"{Path.GetFileName(_filePath!)}.*.tmp");
+
+	[TestMethod]
+	public async Task SaveStateAsync_Cancelled_KeepsThePreviousSaveLoadable()
+	{
+		// Arrange: a good save, then a second save large enough to still be writing when cancelled
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		for (int i = 0; i < 100_000; i++)
+		{
+			navigation.NavigateTo(new NavigationItem($"p{i}", $"Page {i}"));
+		}
+
+		// Act: serialization runs before the first await, so cancelling as soon as the call returns
+		// lands in the middle of the file write
+		using CancellationTokenSource cancellation = new();
+		Task save = navigation.SaveStateAsync(cancellation.Token);
+		await cancellation.CancelAsync().ConfigureAwait(false);
+
+		try
+		{
+			await save.ConfigureAwait(false);
+			Assert.Inconclusive("The save finished before it could be cancelled, so there is nothing to check.");
+		}
+		catch (OperationCanceledException)
+		{
+			// Expected: the save was cancelled mid-write, which is the case under test
+		}
+
+		// Assert
+		Navigation<NavigationItem> restored = new(null, provider);
+		Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false), "The previous save was destroyed by the cancelled one.");
+		Assert.AreEqual(2, restored.Count);
+		Assert.AreEqual("b", restored.Current?.Id);
+		Assert.IsEmpty(GetTemporaryFiles());
+	}
+
+	[TestMethod]
+	public async Task SaveStateAsync_OverAnExistingSave_ReplacesItAndLeavesNoTemporaryFile()
+	{
+		// Arrange
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+
+		// Act
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Navigation<NavigationItem> restored = new(null, provider);
+		Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false));
+		Assert.AreEqual("b", restored.Current?.Id);
+		Assert.AreEqual(2, restored.Count);
+		Assert.IsEmpty(GetTemporaryFiles());
+	}
+
 	[TestMethod]
 	public async Task LoadStateAsync_UnreadableData_ReturnsNull()
 	{

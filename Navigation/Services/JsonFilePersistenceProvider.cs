@@ -74,14 +74,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 
 			cancellationToken.ThrowIfCancellationRequested();
 
-			if (File.Exists(_filePath))
-			{
-				File.Replace(tempPath, _filePath, destinationBackupFileName: null);
-			}
-			else
-			{
-				File.Move(tempPath, _filePath);
-			}
+			SwapIntoPlace(tempPath, _filePath);
 		}
 		catch
 		{
@@ -91,6 +84,34 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+	/// <summary>
+	/// Moves a complete temporary file over the state file, whether or not the state file exists yet.
+	/// Two saves can both find no state file. Whichever moves second must replace the first one's file
+	/// rather than fail with "already exists", so the last writer wins as it does once the file exists.
+	/// </summary>
+	private static void SwapIntoPlace(string tempPath, string filePath)
+	{
+		if (File.Exists(filePath))
+		{
+			File.Replace(tempPath, filePath, destinationBackupFileName: null);
+			return;
+		}
+
+#if NETCOREAPP3_0_OR_GREATER
+		File.Move(tempPath, filePath, overwrite: true);
+#else
+		try
+		{
+			File.Move(tempPath, filePath);
+		}
+		catch (IOException) when (File.Exists(filePath))
+		{
+			// Another save created the file after the check above
+			File.Replace(tempPath, filePath, destinationBackupFileName: null);
+		}
+#endif
+	}
 
 	private static void TryDelete(string path)
 	{

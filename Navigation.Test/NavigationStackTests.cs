@@ -480,6 +480,66 @@ public class NavigationStackTests
 	}
 
 	[TestMethod]
+	public void Undo_WhenAHandlerThrows_LeavesTheStackAndTheHistoryInAgreement()
+	{
+		// Arrange: a handler that throws once, on the first navigation after the history is built
+		NavigateToABC();
+		bool throwOnce = true;
+		_navigation!.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider!.Undo());
+
+		// Assert: the undo did not happen, so the stack is still at C with C's navigation still to undo
+		AssertStack("A,B,C", "C");
+		Assert.HasCount(3, _undoRedoProvider!.GetUndoStack());
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+
+		// And the next undo goes back to B, as the first one should have
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack("A,B", "B");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
+	public void Redo_WhenAHandlerThrows_LeavesTheStackAndTheHistoryInAgreement()
+	{
+		// Arrange: undo to B, then a handler that throws once on the redo
+		NavigateToABC();
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("A,B", "B");
+		bool throwOnce = true;
+		_navigation!.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider.Redo());
+
+		// Assert: the redo did not happen, so the stack is still at B with C still to redo
+		AssertStack("A,B", "B");
+		Assert.HasCount(2, _undoRedoProvider.GetUndoStack());
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		// And the next redo goes forward to C, as the first one should have
+		Assert.IsTrue(_undoRedoProvider.Redo());
+		AssertStack("A,B,C", "C");
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
 	public void NavigateTo_FromAHandlerOutsideUndo_IsStillRecorded()
 	{
 		// Arrange

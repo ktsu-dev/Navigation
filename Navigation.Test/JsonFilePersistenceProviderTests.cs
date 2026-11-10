@@ -121,6 +121,75 @@ public class JsonFilePersistenceProviderTests
 	}
 
 	[TestMethod]
+	public async Task SaveStateAsync_OverARestrictedSave_KeepsItsPermissions()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Inconclusive("Unix file modes do not apply on Windows.");
+			return;
+		}
+
+		// Arrange
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+		const UnixFileMode ownerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+		File.SetUnixFileMode(_filePath!, ownerOnly);
+		navigation.NavigateTo(new NavigationItem("b", "B"));
+
+		// Act
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.AreEqual(ownerOnly, File.GetUnixFileMode(_filePath!), "Saving made a 0600 state file readable by others.");
+		Navigation<NavigationItem> restored = new(null, provider);
+		Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false));
+		Assert.AreEqual("b", restored.Current?.Id);
+		Assert.IsEmpty(GetTemporaryFiles());
+	}
+
+	[TestMethod]
+	public async Task SaveStateAsync_ThroughASymlink_KeepsTheLinkAndWritesItsTarget()
+	{
+		// Arrange
+		string directory = Path.Combine(Path.GetTempPath(), $"navigation-{Guid.NewGuid():N}");
+		Directory.CreateDirectory(directory);
+		try
+		{
+			string target = Path.Combine(directory, "real.json");
+			string link = Path.Combine(directory, "state.json");
+			await File.WriteAllTextAsync(target, "{}").ConfigureAwait(false);
+			try
+			{
+				File.CreateSymbolicLink(link, "real.json");
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				Assert.Inconclusive($"This process cannot create a symbolic link: {ex.Message}");
+			}
+
+			JsonFilePersistenceProvider<NavigationItem> provider = new(link);
+			Navigation<NavigationItem> navigation = new(null, provider);
+			navigation.NavigateTo(new NavigationItem("a", "A"));
+
+			// Act
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsNotNull(new FileInfo(link).LinkTarget, "Saving replaced the symbolic link with a regular file.");
+			Navigation<NavigationItem> restored = new(null, new JsonFilePersistenceProvider<NavigationItem>(target));
+			Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false), "The link's target did not receive the new state.");
+			Assert.AreEqual("a", restored.Current?.Id);
+			Assert.HasCount(2, Directory.GetFiles(directory), "A temporary file was left behind.");
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	[TestMethod]
 	public async Task LoadStateAsync_UnreadableData_ReturnsNull()
 	{
 		// Arrange

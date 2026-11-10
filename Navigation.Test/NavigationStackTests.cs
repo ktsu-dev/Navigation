@@ -380,6 +380,34 @@ public class NavigationStackTests
 	}
 
 	[TestMethod]
+	public async Task LoadStateAsync_OfTheCurrentStack_RecordsNoUndoAndRaisesNoEvent()
+	{
+		// Arrange
+		NavigationItem a = new("A", "A");
+		NavigationItem b = new("B", "B");
+		_navigation!.NavigateTo(a);
+		_navigation.NavigateTo(b);
+		await _navigation.SaveStateAsync().ConfigureAwait(false);
+		List<NavigationEventArgs<NavigationItem>> events = [];
+		_navigation.NavigationChanged += (sender, e) => events.Add(e);
+
+		// Act
+		bool loaded = await _navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(loaded);
+		Assert.IsEmpty(events);
+		AssertStack("A,B", "B");
+
+		// The first undo goes back to A, not through a step that changes nothing
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("A", "A");
+		Assert.HasCount(1, events);
+		Assert.AreSame(b, events[0].PreviousItem);
+		Assert.AreSame(a, events[0].CurrentItem);
+	}
+
+	[TestMethod]
 	public void GoBack_WithoutUndoProvider_StillNavigates()
 	{
 		// Arrange

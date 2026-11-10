@@ -279,6 +279,14 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		T? currentItem;
 		lock (_sync)
 		{
+			// A load that matches the stack changes nothing, so it records no undo step that would itself do nothing
+			// and raises no event from the current page to itself. Items are compared by reference, as RestoreState
+			// compares them
+			if (currentIndex == _currentIndex && IsSameItems(items))
+			{
+				return true;
+			}
+
 			previousItem = CurrentUnlocked;
 			int beforeIndex = _currentIndex;
 			List<T>? beforeItems = SnapshotForUndo();

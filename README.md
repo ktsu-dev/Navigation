@@ -133,6 +133,41 @@ await navigation.LoadStateAsync();
 Console.WriteLine($"Restored to: {navigation.Current?.DisplayName}");
 ```
 
+#### Saving subclasses of the item type
+
+`JsonFilePersistenceProvider<T>` writes each item as `T`. If a `Navigation<NavigationItem>` holds a subclass such as `DocumentPage : NavigationItem`, JSON can't save its type or the properties it adds. So `SaveStateAsync` throws `NotSupportedException` naming the subclass, and the last save stays in place. To keep several page types in one stack, configure polymorphism for `T` through the JSON options:
+
+```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+
+var options = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    TypeInfoResolver = new DefaultJsonTypeInfoResolver
+    {
+        Modifiers =
+        {
+            typeInfo =>
+            {
+                if (typeInfo.Type == typeof(NavigationItem))
+                {
+                    typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+                    {
+                        DerivedTypes = { new JsonDerivedType(typeof(DocumentPage), "document") },
+                    };
+                }
+            },
+        },
+    },
+};
+
+var persistenceProvider = new JsonFilePersistenceProvider<NavigationItem>("navigation-state.json", options);
+```
+
+Every subclass you save needs a `JsonDerivedType` entry. Plain `NavigationItem` items keep working alongside them.
+
 ### Complete Example with All Features
 
 ```csharp

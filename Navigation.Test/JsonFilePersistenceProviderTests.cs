@@ -5,6 +5,7 @@ namespace ktsu.Navigation.Test;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using ktsu.Navigation.Contracts;
 using ktsu.Navigation.Models;
 using ktsu.Navigation.Services;
@@ -276,6 +277,66 @@ public class JsonFilePersistenceProviderTests
 	}
 
 	[TestMethod]
+	public async Task SaveStateAsync_SubclassItemWithoutPolymorphism_ThrowsNamingTheTypeAndKeepsTheLastSave()
+	{
+		// Arrange: a good save, then a subclass item whose FilePath JSON would drop
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+		string lastSave = await File.ReadAllTextAsync(_filePath!).ConfigureAwait(false);
+		navigation.NavigateTo(new DocumentPageItem("b", "B") { FilePath = "/docs/b.txt" });
+
+		// Act
+		NotSupportedException exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(() => navigation.SaveStateAsync()).ConfigureAwait(false);
+
+		// Assert
+		Assert.Contains(typeof(DocumentPageItem).FullName!, exception.Message);
+		Assert.AreEqual(lastSave, await File.ReadAllTextAsync(_filePath!).ConfigureAwait(false));
+	}
+
+	[TestMethod]
+	public async Task SaveThenLoad_SubclassItemWithPolymorphismConfigured_RoundTripsItsTypeAndProperties()
+	{
+		// Arrange
+		JsonSerializerOptions options = new()
+		{
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			TypeInfoResolver = new DefaultJsonTypeInfoResolver
+			{
+				Modifiers =
+				{
+					typeInfo =>
+					{
+						if (typeInfo.Type == typeof(NavigationItem))
+						{
+							typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+							{
+								DerivedTypes = { new JsonDerivedType(typeof(DocumentPageItem), "document") },
+							};
+						}
+					},
+				},
+			},
+		};
+		JsonFilePersistenceProvider<NavigationItem> provider = new(_filePath!, options);
+		Navigation<NavigationItem> navigation = new(null, provider);
+		navigation.NavigateTo(new NavigationItem("a", "A"));
+		navigation.NavigateTo(new DocumentPageItem("b", "B") { FilePath = "/docs/b.txt" });
+		await navigation.SaveStateAsync().ConfigureAwait(false);
+
+		// Act
+		Navigation<NavigationItem> restored = new(null, provider);
+		bool loaded = await restored.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(loaded);
+		Assert.IsExactInstanceOfType<NavigationItem>(restored.GetHistory()[0]);
+		DocumentPageItem current = Assert.IsExactInstanceOfType<DocumentPageItem>(restored.Current);
+		Assert.AreEqual("/docs/b.txt", current.FilePath);
+	}
+
+	[TestMethod]
 	public async Task SaveThenLoad_ReadmeCustomItem_RoundTrips()
 	{
 		// Arrange
@@ -473,6 +534,11 @@ public class JsonFilePersistenceProviderTests
 }
 
 /// <summary>The README's custom item before it gained a JSON constructor: <c>filePath</c> binds to no property.</summary>
+public class DocumentPageItem(string id, string displayName) : NavigationItem(id, displayName)
+{
+	public string FilePath { get; set; } = "";
+}
+
 public class UnboundConstructorItem : INavigationItem
 {
 	private readonly Dictionary<string, object> _metadata = [];

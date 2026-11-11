@@ -279,6 +279,14 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		T? currentItem;
 		lock (_sync)
 		{
+			// A load that matches the stack changes nothing, so it records no undo step that would itself do nothing
+			// and raises no event from the current page to itself. Items are compared by reference, as RestoreState
+			// compares them
+			if (currentIndex == _currentIndex && IsSameItems(items))
+			{
+				return true;
+			}
+
 			previousItem = CurrentUnlocked;
 			int beforeIndex = _currentIndex;
 			List<T>? beforeItems = SnapshotForUndo();
@@ -314,10 +322,17 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// </summary>
 	/// <param name="items">The items to restore</param>
 	/// <param name="currentIndex">The current index to restore</param>
+	/// <remarks>
+	/// If a <see cref="NavigationChanged"/> handler throws, the stack goes back to the state it had before the
+	/// restore and the exception propagates. The undo/redo provider treats an action that throws as one that
+	/// changed nothing, so leaving the restored state in place would put the stack and its history out of step.
+	/// </remarks>
 	internal void RestoreState(IEnumerable<T> items, int currentIndex)
 	{
 		T? previousItem;
 		T? currentItem;
+		List<T> beforeItems;
+		int beforeIndex;
 		lock (_sync)
 		{
 			List<T> restored = [.. items];
@@ -332,6 +347,8 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 			}
 
 			previousItem = CurrentUnlocked;
+			beforeItems = [.. _items];
+			beforeIndex = _currentIndex;
 			ReplaceItems(restored, currentIndex);
 			currentItem = CurrentUnlocked;
 		}
@@ -347,6 +364,15 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		try
 		{
 			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		}
+		catch
+		{
+			lock (_sync)
+			{
+				ReplaceItems(beforeItems, beforeIndex);
+			}
+
+			throw;
 		}
 		finally
 		{

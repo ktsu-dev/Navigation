@@ -380,6 +380,34 @@ public class NavigationStackTests
 	}
 
 	[TestMethod]
+	public async Task LoadStateAsync_OfTheCurrentStack_RecordsNoUndoAndRaisesNoEvent()
+	{
+		// Arrange
+		NavigationItem a = new("A", "A");
+		NavigationItem b = new("B", "B");
+		_navigation!.NavigateTo(a);
+		_navigation.NavigateTo(b);
+		await _navigation.SaveStateAsync().ConfigureAwait(false);
+		List<NavigationEventArgs<NavigationItem>> events = [];
+		_navigation.NavigationChanged += (sender, e) => events.Add(e);
+
+		// Act
+		bool loaded = await _navigation.LoadStateAsync().ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(loaded);
+		Assert.IsEmpty(events);
+		AssertStack("A,B", "B");
+
+		// The first undo goes back to A, not through a step that changes nothing
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("A", "A");
+		Assert.HasCount(1, events);
+		Assert.AreSame(b, events[0].PreviousItem);
+		Assert.AreSame(a, events[0].CurrentItem);
+	}
+
+	[TestMethod]
 	public void GoBack_WithoutUndoProvider_StillNavigates()
 	{
 		// Arrange
@@ -474,6 +502,66 @@ public class NavigationStackTests
 		// Assert: the redirect happened, but C is still there to redo
 		AssertStack("A,B,home", "home");
 		Assert.IsTrue(_undoRedoProvider.CanRedo);
+		Assert.IsTrue(_undoRedoProvider.Redo());
+		AssertStack("A,B,C", "C");
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
+	public void Undo_WhenAHandlerThrows_LeavesTheStackAndTheHistoryInAgreement()
+	{
+		// Arrange: a handler that throws once, on the first navigation after the history is built
+		NavigateToABC();
+		bool throwOnce = true;
+		_navigation!.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider!.Undo());
+
+		// Assert: the undo did not happen, so the stack is still at C with C's navigation still to undo
+		AssertStack("A,B,C", "C");
+		Assert.HasCount(3, _undoRedoProvider!.GetUndoStack());
+		Assert.IsFalse(_undoRedoProvider.CanRedo);
+
+		// And the next undo goes back to B, as the first one should have
+		Assert.IsTrue(_undoRedoProvider.Undo());
+		AssertStack("A,B", "B");
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+	}
+
+	[TestMethod]
+	public void Redo_WhenAHandlerThrows_LeavesTheStackAndTheHistoryInAgreement()
+	{
+		// Arrange: undo to B, then a handler that throws once on the redo
+		NavigateToABC();
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		AssertStack("A,B", "B");
+		bool throwOnce = true;
+		_navigation!.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider.Redo());
+
+		// Assert: the redo did not happen, so the stack is still at B with C still to redo
+		AssertStack("A,B", "B");
+		Assert.HasCount(2, _undoRedoProvider.GetUndoStack());
+		Assert.IsTrue(_undoRedoProvider.CanRedo);
+
+		// And the next redo goes forward to C, as the first one should have
 		Assert.IsTrue(_undoRedoProvider.Redo());
 		AssertStack("A,B,C", "C");
 		Assert.IsFalse(_undoRedoProvider.CanRedo);

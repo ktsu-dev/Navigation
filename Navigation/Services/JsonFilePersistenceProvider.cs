@@ -45,7 +45,12 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	{
 		Ensure.NotNull(state);
 
-		string? directory = Path.GetDirectoryName(_filePath);
+		// A state path that is a symbolic link, for example into a dotfiles repository, is saved
+		// through: the new state goes to the link's final target and the link stays. Swapping the
+		// temporary file in at the link's own path would replace the link with a regular file.
+		string targetPath = ResolveFinalTarget(_filePath);
+
+		string? directory = Path.GetDirectoryName(targetPath);
 		if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
 		{
 			Directory.CreateDirectory(directory);
@@ -57,10 +62,10 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 		// Writing over the live file truncates it first, so a cancelled token, a crash or a full disk
 		// part way through the write destroyed the last good save. Write the new state next to it and
 		// swap it in only once it is complete and on disk.
-		string tempPath = $"{_filePath}.{Guid.NewGuid():N}.tmp";
+		string tempPath = $"{targetPath}.{Guid.NewGuid():N}.tmp";
 		try
 		{
-			using (FileStream stream = new(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+			using (FileStream stream = CreateTemporaryFile(tempPath, targetPath))
 			{
 				await stream.WriteAsync(bytes.AsMemory(), cancellationToken).ConfigureAwait(false);
 				await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -74,7 +79,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 
 			cancellationToken.ThrowIfCancellationRequested();
 
-			SwapIntoPlace(tempPath, _filePath);
+			SwapIntoPlace(tempPath, targetPath);
 		}
 		catch
 		{
@@ -111,6 +116,64 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 			File.Replace(tempPath, filePath, destinationBackupFileName: null);
 		}
 #endif
+	}
+
+	private static string ResolveFinalTarget(string path)
+	{
+#if NET6_0_OR_GREATER
+		FileInfo file = new(path);
+
+		// LinkTarget is null both for a regular file and for a path that does not exist yet, where
+		// ResolveLinkTarget would throw instead
+		if (file.LinkTarget is null)
+		{
+			return path;
+		}
+
+		return file.ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? path;
+#else
+		return path;
+#endif
+	}
+
+	/// <summary>
+	/// Creates the file the new state is written to before it replaces <paramref name="targetPath"/>.
+	/// The swap renames it over the target, so the saved file has the temporary file's mode. On Unix
+	/// that would be the umask default, which turned a state file restricted to 0600 into 0644 on
+	/// the next save. The temporary file therefore takes the target's mode, from creation onward so
+	/// that the new state is never readable by more users than the old one was.
+	/// </summary>
+	private static FileStream CreateTemporaryFile(string tempPath, string targetPath)
+	{
+#if NET7_0_OR_GREATER
+		if (!OperatingSystem.IsWindows() && File.Exists(targetPath))
+		{
+			UnixFileMode mode = File.GetUnixFileMode(targetPath);
+			FileStream stream = new(tempPath, new FileStreamOptions
+			{
+				Mode = FileMode.CreateNew,
+				Access = FileAccess.Write,
+				Share = FileShare.None,
+				BufferSize = 4096,
+				Options = FileOptions.Asynchronous,
+				UnixCreateMode = mode,
+			});
+
+			// UnixCreateMode is masked by the umask, so set the mode exactly once the file exists
+			try
+			{
+				File.SetUnixFileMode(tempPath, mode);
+			}
+			catch
+			{
+				stream.Dispose();
+				throw;
+			}
+
+			return stream;
+		}
+#endif
+		return new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true);
 	}
 
 	private static void TryDelete(string path)

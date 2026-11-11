@@ -41,9 +41,14 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	/// <inheritdoc />
+	/// <exception cref="NotSupportedException">
+	/// An item is a subclass of <typeparamref name="T"/> and the JSON options configure no polymorphism for
+	/// <typeparamref name="T"/>, so its type and the properties it adds would not be saved.
+	/// </exception>
 	public async Task SaveStateAsync(INavigationState<T> state, CancellationToken cancellationToken = default)
 	{
 		Ensure.NotNull(state);
+		EnsureItemsKeepTheirType(state);
 
 		// A state path that is a symbolic link, for example into a dotfiles repository, is saved
 		// through: the new state goes to the link's final target and the link stays. Swapping the
@@ -96,6 +101,45 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+	/// <summary>
+	/// Refuses a state holding an item that JSON would save as the base <typeparamref name="T"/>
+	/// </summary>
+	/// <param name="state">The state about to be saved</param>
+	/// <remarks>
+	/// System.Text.Json writes each item as the declared <typeparamref name="T"/>, so without polymorphism a
+	/// subclass's own properties were dropped and the item came back as a plain <typeparamref name="T"/>, with
+	/// nothing reporting the loss. An interface or abstract <typeparamref name="T"/> is left alone: its saved
+	/// state cannot be loaded back in any case, and <see cref="LoadStateAsync"/> reports that by returning null.
+	/// </remarks>
+	private void EnsureItemsKeepTheirType(INavigationState<T> state)
+	{
+		Type declaredType = typeof(T);
+		if (declaredType.IsInterface || declaredType.IsAbstract)
+		{
+			return;
+		}
+
+		foreach (T item in state.Items)
+		{
+			Type? itemType = item?.GetType();
+			if (itemType is null || itemType == declaredType)
+			{
+				continue;
+			}
+
+			if (_jsonOptions.GetTypeInfo(declaredType).PolymorphismOptions is null)
+			{
+				throw new NotSupportedException(
+					$"Cannot save a navigation item of type '{itemType.FullName}' as '{declaredType.FullName}': JSON would "
+					+ $"save it as a plain '{declaredType.Name}', losing its type and the properties it adds. Configure "
+					+ $"polymorphism for '{declaredType.Name}' in the JSON options (a JsonDerivedType for '{itemType.Name}'), "
+					+ $"or use a navigation stack of '{itemType.Name}'.");
+			}
+
+			return;
+		}
+	}
 
 	private static string ResolveFinalTarget(string path)
 	{

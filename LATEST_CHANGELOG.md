@@ -2,6 +2,9 @@
 
 Changes since v1.5.1:
 
+- Record nothing when LoadStateAsync loads the current stack [patch] (#110) (matt-edmondson)
+- Roll back an undo or redo whose NavigationChanged handler throws [patch] (#112) (matt-edmondson)
+- Keep a state file's permissions and symbolic link when saving over it [patch] (#114) (matt-edmondson)
 - Add a SessionStart hook for Claude Code cloud sessions (#91) (matt-edmondson)
 - Save navigation state through a temporary file [patch] (#105) (matt-edmondson)
 - Report each navigation once when a provider executes actions as it registers them [patch] (#103) (matt-edmondson)

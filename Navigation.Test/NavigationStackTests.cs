@@ -568,6 +568,117 @@ public class NavigationStackTests
 	}
 
 	[TestMethod]
+	public void Undo_WhenAHandlerThrows_TellsEarlierHandlersTheStackWentBack()
+	{
+		// Arrange: a subscriber mirrors the current page, and a later handler throws once
+		NavigateToABC();
+		string? shown = _navigation!.Current?.Id;
+		_navigation.NavigationChanged += (_, e) => shown = e.CurrentItem?.Id;
+		bool throwOnce = true;
+		_navigation.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		InvalidOperationException thrown = Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider!.Undo());
+
+		// Assert: the original exception propagates, and the subscriber is back on the page the stack is on
+		Assert.AreEqual("handler failed", thrown.Message);
+		AssertStack("A,B,C", "C");
+		Assert.AreEqual(_navigation.Current?.Id, shown);
+	}
+
+	[TestMethod]
+	public void Redo_WhenAHandlerThrows_TellsEarlierHandlersTheStackWentBack()
+	{
+		// Arrange: undo to B, then a subscriber that mirrors the current page and a later handler that throws once
+		NavigateToABC();
+		Assert.IsTrue(_undoRedoProvider!.Undo());
+		string? shown = _navigation!.Current?.Id;
+		_navigation.NavigationChanged += (_, e) => shown = e.CurrentItem?.Id;
+		bool throwOnce = true;
+		_navigation.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider.Redo());
+
+		// Assert: the subscriber is back on B with the stack, and the next GoBack keeps them together
+		AssertStack("A,B", "B");
+		Assert.AreEqual("B", shown);
+		Assert.IsNotNull(_navigation.GoBack());
+		Assert.AreEqual(_navigation.Current?.Id, shown);
+	}
+
+	[TestMethod]
+	public void Undo_WhenAHandlerThrowsAfterAnotherRedirected_TellsHandlersTheStackWentBack()
+	{
+		// Arrange: undoing to B is redirected to home by one handler, and a later handler throws once
+		NavigateToABC();
+		NavigationItem home = new("home", "Home");
+		string? shown = _navigation!.Current?.Id;
+		_navigation.NavigationChanged += (_, e) => shown = e.CurrentItem?.Id;
+		bool redirected = false;
+		_navigation.NavigationChanged += (_, e) =>
+		{
+			if (!redirected && e.CurrentItem?.Id == "B")
+			{
+				redirected = true;
+				_navigation.NavigateTo(home);
+			}
+		};
+		bool throwOnce = true;
+		_navigation.NavigationChanged += (_, _) =>
+		{
+			if (throwOnce)
+			{
+				throwOnce = false;
+				throw new InvalidOperationException("handler failed");
+			}
+		};
+
+		// Act
+		Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider!.Undo());
+
+		// Assert: the redirect was rolled back with the undo, and the subscriber was told
+		Assert.IsTrue(redirected);
+		AssertStack("A,B,C", "C");
+		Assert.AreEqual("C", shown);
+	}
+
+	[TestMethod]
+	public void Undo_WhenTheRollbackNoticeAlsoThrows_StillPropagatesTheOriginalException()
+	{
+		// Arrange: a handler that throws on every event
+		NavigateToABC();
+		int calls = 0;
+		_navigation!.NavigationChanged += (_, _) =>
+		{
+			calls++;
+			throw new InvalidOperationException($"handler failed {calls}");
+		};
+
+		// Act
+		InvalidOperationException thrown = Assert.ThrowsExactly<InvalidOperationException>(() => _undoRedoProvider!.Undo());
+
+		// Assert: the handler heard the undo and its rollback, and the undo's exception is the one reported
+		Assert.AreEqual("handler failed 1", thrown.Message);
+		Assert.AreEqual(2, calls);
+		AssertStack("A,B,C", "C");
+	}
+
+	[TestMethod]
 	public void NavigateTo_FromAHandlerOutsideUndo_IsStillRecorded()
 	{
 		// Arrange

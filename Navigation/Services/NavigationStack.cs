@@ -4,6 +4,7 @@ namespace ktsu.Navigation.Services;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -414,8 +415,9 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		{
 			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
 		}
-		catch (Exception)
+		catch (Exception ex) when (ex is not OutOfMemoryException)
 		{
+			Trace.TraceWarning($"A NavigationChanged handler threw while being told an undo or redo was rolled back: {ex}");
 		}
 	}
 

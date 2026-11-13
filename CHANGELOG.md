@@ -2,6 +2,7 @@
 
 Changes since v1.5.1:
 
+- Tell handlers when a failed undo or redo is rolled back [patch] (#119) (matt-edmondson)
 - Refuse to save a subclass item that JSON would save as its base type [patch] (#113) (matt-edmondson)
 - Record nothing when LoadStateAsync loads the current stack [patch] (#110) (matt-edmondson)
 - Roll back an undo or redo whose NavigationChanged handler throws [patch] (#112) (matt-edmondson)

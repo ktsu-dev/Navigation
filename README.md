@@ -42,6 +42,7 @@ Perfect for applications that need robust navigation management, such as:
 - ✅ State change notifications
 - ✅ Error handling during undo/redo operations
 - ✅ Redirects made by a `NavigationChanged` handler during an undo or redo are not recorded as new actions, so the redo history survives them
+- ✅ If a `NavigationChanged` handler throws during an undo or redo, the stack and its history go back to where they were, and a second `NavigationChanged` tells the handlers that already ran, before the exception propagates
 
 ### Persistence
 - ✅ JSON file persistence provider

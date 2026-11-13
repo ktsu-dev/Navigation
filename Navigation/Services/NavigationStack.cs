@@ -4,6 +4,7 @@ namespace ktsu.Navigation.Services;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -326,6 +327,9 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 	/// If a <see cref="NavigationChanged"/> handler throws, the stack goes back to the state it had before the
 	/// restore and the exception propagates. The undo/redo provider treats an action that throws as one that
 	/// changed nothing, so leaving the restored state in place would put the stack and its history out of step.
+	/// If the rollback leaves the current item different from the one the handlers were last told about, it raises
+	/// <see cref="NavigationChanged"/> once more, from that item to the one the stack went back to. An exception
+	/// from that second event is not propagated, so the caller still sees the handler's original exception.
 	/// </remarks>
 	internal void RestoreState(IEnumerable<T> items, int currentIndex)
 	{
@@ -367,9 +371,21 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 		}
 		catch
 		{
+			// The handlers that ran before the one that threw were told about the restore, and about any redirect
+			// a handler made during it. Tell them the stack went back, so a subscriber that mirrors the current
+			// item doesn't stay on a page the stack is no longer on
+			T? shownItem;
+			T? rolledBackItem;
 			lock (_sync)
 			{
+				shownItem = CurrentUnlocked;
 				ReplaceItems(beforeItems, beforeIndex);
+				rolledBackItem = CurrentUnlocked;
+			}
+
+			if (!ReferenceEquals(shownItem, rolledBackItem))
+			{
+				RaiseRollbackNotice(shownItem, rolledBackItem);
 			}
 
 			throw;
@@ -383,6 +399,25 @@ public class Navigation<T>(IUndoRedoProvider? undoRedoProvider = null, IPersiste
 					_restoringThreads.Remove(thread);
 				}
 			}
+		}
+	}
+
+	/// <summary>
+	/// Raises <see cref="NavigationChanged"/> for a restore that was rolled back. The exception that caused the
+	/// rollback is the one the caller sees, so an exception from this event's own handlers is not propagated
+	/// </summary>
+	/// <param name="previousItem">The item the handlers were last told about</param>
+	/// <param name="currentItem">The item the stack went back to</param>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "The exception that caused the rollback must be the one that propagates")]
+	private void RaiseRollbackNotice(T? previousItem, T? currentItem)
+	{
+		try
+		{
+			OnNavigationChanged(NavigationType.NavigateTo, previousItem, currentItem);
+		}
+		catch (Exception ex) when (ex is not OutOfMemoryException)
+		{
+			Trace.TraceWarning($"A NavigationChanged handler threw while being told an undo or redo was rolled back: {ex}");
 		}
 	}
 

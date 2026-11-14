@@ -190,6 +190,115 @@ public class JsonFilePersistenceProviderTests
 	}
 
 	[TestMethod]
+	public async Task ClearSavedStateAsync_ThroughASymlink_DeletesTheTargetAndKeepsTheLink()
+	{
+		// Arrange
+		string directory = CreateTemporaryDirectory();
+		try
+		{
+			string target = Path.Combine(directory, "real.json");
+			string link = Path.Combine(directory, "state.json");
+			await File.WriteAllTextAsync(target, "{}").ConfigureAwait(false);
+			CreateSymbolicLinkOrSkip(link, "real.json");
+
+			JsonFilePersistenceProvider<NavigationItem> provider = new(link);
+			Navigation<NavigationItem> navigation = new(null, provider);
+			navigation.NavigateTo(new NavigationItem("a", "A"));
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+
+			// Act
+			await provider.ClearSavedStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsNotNull(new FileInfo(link).LinkTarget, "Clearing deleted the symbolic link instead of the state it points at.");
+			Assert.IsFalse(File.Exists(target), "Clearing left the old state in the link's target.");
+			Assert.IsFalse(await provider.HasSavedStateAsync().ConfigureAwait(false));
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	[TestMethod]
+	public async Task SaveStateAsync_AfterClearingThroughASymlink_WritesTheTargetAndKeepsTheLink()
+	{
+		// Arrange
+		string directory = CreateTemporaryDirectory();
+		try
+		{
+			string target = Path.Combine(directory, "real.json");
+			string link = Path.Combine(directory, "state.json");
+			await File.WriteAllTextAsync(target, "{}").ConfigureAwait(false);
+			CreateSymbolicLinkOrSkip(link, "real.json");
+
+			JsonFilePersistenceProvider<NavigationItem> provider = new(link);
+			Navigation<NavigationItem> navigation = new(null, provider);
+			navigation.NavigateTo(new NavigationItem("a", "A"));
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+			await provider.ClearSavedStateAsync().ConfigureAwait(false);
+			navigation.NavigateTo(new NavigationItem("b", "B"));
+
+			// Act
+			await navigation.SaveStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsNotNull(new FileInfo(link).LinkTarget, "Saving after a clear replaced the symbolic link with a regular file.");
+			Navigation<NavigationItem> restored = new(null, new JsonFilePersistenceProvider<NavigationItem>(target));
+			Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false), "The link's target did not receive the new state.");
+			Assert.AreEqual("b", restored.Current?.Id);
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	[TestMethod]
+	public async Task HasAndLoad_ThroughADanglingSymlink_ReportNoSavedState()
+	{
+		// Arrange
+		string directory = CreateTemporaryDirectory();
+		try
+		{
+			string link = Path.Combine(directory, "state.json");
+			CreateSymbolicLinkOrSkip(link, Path.Combine("dotfiles", "state.json"));
+			JsonFilePersistenceProvider<NavigationItem> provider = new(link);
+
+			// Act
+			bool hasSavedState = await provider.HasSavedStateAsync().ConfigureAwait(false);
+			INavigationState<NavigationItem>? loaded = await provider.LoadStateAsync().ConfigureAwait(false);
+
+			// Assert
+			Assert.IsFalse(hasSavedState, "A link whose target does not exist yet was reported as saved state.");
+			Assert.IsNull(loaded);
+		}
+		finally
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
+
+	private static string CreateTemporaryDirectory()
+	{
+		string directory = Path.Combine(Path.GetTempPath(), $"navigation-{Guid.NewGuid():N}");
+		Directory.CreateDirectory(directory);
+		return directory;
+	}
+
+	private static void CreateSymbolicLinkOrSkip(string link, string pathToTarget)
+	{
+		try
+		{
+			File.CreateSymbolicLink(link, pathToTarget);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Assert.Inconclusive($"This process cannot create a symbolic link: {ex.Message}");
+		}
+	}
+
+	[TestMethod]
 	public async Task LoadStateAsync_UnreadableData_ReturnsNull()
 	{
 		// Arrange

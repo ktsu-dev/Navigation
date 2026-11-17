@@ -57,6 +57,42 @@ public class JsonFilePersistenceProviderTests
 		Assert.AreEqual("c", string.Join(",", restored.GetForwardStack().Select(item => item.Id)));
 	}
 
+	[TestMethod]
+	public async Task ConcurrentFirstSaves_ToNewFile_BothSucceed()
+	{
+		// Two saves that both find no state file used to race on File.Move, and the loser threw
+		// "already exists". Loop, because the window is narrow
+		string directory = Path.Combine(Path.GetTempPath(), $"navigation-{Guid.NewGuid():N}");
+		try
+		{
+			for (int i = 0; i < 200; i++)
+			{
+				string filePath = Path.Combine(directory, $"state-{i}.json");
+				JsonFilePersistenceProvider<NavigationItem> provider = new(filePath);
+				Navigation<NavigationItem> first = new(null, provider);
+				first.NavigateTo(new NavigationItem("a", "A"));
+				Navigation<NavigationItem> second = new(null, provider);
+				second.NavigateTo(new NavigationItem("b", "B"));
+
+				await Task.WhenAll(
+					Task.Run(() => first.SaveStateAsync()),
+					Task.Run(() => second.SaveStateAsync())).ConfigureAwait(false);
+
+				Navigation<NavigationItem> restored = new(null, provider);
+				Assert.IsTrue(await restored.LoadStateAsync().ConfigureAwait(false), $"iteration {i}");
+				Assert.IsTrue(restored.Current?.Id is "a" or "b", $"iteration {i}");
+				Assert.IsEmpty(Directory.GetFiles(directory, $"state-{i}.json.*.tmp"), $"iteration {i}");
+			}
+		}
+		finally
+		{
+			if (Directory.Exists(directory))
+			{
+				Directory.Delete(directory, recursive: true);
+			}
+		}
+	}
+
 	private string[] GetTemporaryFiles() =>
 		Directory.GetFiles(Path.GetDirectoryName(_filePath!)!, $"{Path.GetFileName(_filePath!)}.*.tmp");
 

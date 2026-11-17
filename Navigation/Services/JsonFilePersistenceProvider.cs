@@ -84,14 +84,7 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 
 			cancellationToken.ThrowIfCancellationRequested();
 
-			if (File.Exists(targetPath))
-			{
-				File.Replace(tempPath, targetPath, destinationBackupFileName: null);
-			}
-			else
-			{
-				File.Move(tempPath, targetPath);
-			}
+			SwapIntoPlace(tempPath, targetPath);
 		}
 		catch
 		{
@@ -101,6 +94,47 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+	/// <summary>
+	/// Moves a complete temporary file over the state file, whether or not the state file exists yet.
+	/// Two saves can both find no state file. Whichever moves second must replace the first one's file
+	/// rather than fail with "already exists", so the last writer wins as it does once the file exists.
+	/// </summary>
+	/// <remarks>
+	/// Swaps to one file are serialized within the process. Windows refuses a rename onto a file that
+	/// another save is replacing at that moment ("Access to the path is denied"), and without the lock the
+	/// existence check below could also go stale before the move.
+	/// </remarks>
+	private static void SwapIntoPlace(string tempPath, string filePath)
+	{
+		lock (StateFileLocks.For(filePath))
+		{
+			SwapIntoPlaceUnlocked(tempPath, filePath);
+		}
+	}
+
+	private static void SwapIntoPlaceUnlocked(string tempPath, string filePath)
+	{
+		if (File.Exists(filePath))
+		{
+			File.Replace(tempPath, filePath, destinationBackupFileName: null);
+			return;
+		}
+
+#if NETCOREAPP3_0_OR_GREATER
+		File.Move(tempPath, filePath, overwrite: true);
+#else
+		try
+		{
+			File.Move(tempPath, filePath);
+		}
+		catch (IOException) when (File.Exists(filePath))
+		{
+			// Another save created the file after the check above
+			File.Replace(tempPath, filePath, destinationBackupFileName: null);
+		}
+#endif
+	}
 
 	/// <summary>
 	/// Refuses a state holding an item that JSON would save as the base <typeparamref name="T"/>

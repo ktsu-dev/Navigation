@@ -218,14 +218,17 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	/// <inheritdoc />
 	public async Task<INavigationState<T>?> LoadStateAsync(CancellationToken cancellationToken = default)
 	{
-		if (!File.Exists(_filePath))
+		// Read the state a symbolic link points at, as SaveStateAsync writes it. A link whose target
+		// does not exist yet (a fresh dotfiles checkout) holds no state.
+		string targetPath = ResolveFinalTarget(_filePath);
+		if (!File.Exists(targetPath))
 		{
 			return null;
 		}
 
 		try
 		{
-			string json = await File.ReadAllTextAsync(_filePath, cancellationToken).ConfigureAwait(false);
+			string json = await File.ReadAllTextAsync(targetPath, cancellationToken).ConfigureAwait(false);
 			return JsonSerializer.Deserialize<NavigationState<T>>(json, _jsonOptions);
 		}
 		catch (JsonException)
@@ -258,14 +261,18 @@ public class JsonFilePersistenceProvider<T> : IPersistenceProvider<T> where T : 
 	}
 
 	/// <inheritdoc />
-	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default) => Task.FromResult(File.Exists(_filePath));
+	public Task<bool> HasSavedStateAsync(CancellationToken cancellationToken = default) => Task.FromResult(File.Exists(ResolveFinalTarget(_filePath)));
 
 	/// <inheritdoc />
 	public Task ClearSavedStateAsync(CancellationToken cancellationToken = default)
 	{
-		if (File.Exists(_filePath))
+		// Deleting a symbolic link's own path removed the link and left the old state in its target,
+		// so the next save wrote a regular file the linked location never saw. Delete the state the
+		// link points at, and keep the link.
+		string targetPath = ResolveFinalTarget(_filePath);
+		if (File.Exists(targetPath))
 		{
-			File.Delete(_filePath);
+			File.Delete(targetPath);
 		}
 
 		return Task.CompletedTask;
